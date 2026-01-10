@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier Compagnie | Compagnie aérienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+        <header class="main-header">
+            <div>
+                <p class="eyebrow">Fenitra ETU003660</p>
+                <h1>Modifier une compagnie</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span>Module Compagnies</span>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+                <h2 class="section-title">Éditer compagnie</h2>
+                <form th:action="@{/compagnies/edit/{id}(id=${compagnie.idCompagnie})}" method="post" th:object="${compagnie}" class="form">
+                    <div class="form-group">
+                        <label for="nom">Nom</label>
+                        <input type="text" id="nom" name="nom" th:field="*{nom}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pays">Pays</label>
+                        <input type="text" id="pays" name="pays" th:field="*{pays}">
+                    </div>
+                    <div class="form-group">
+                        <label for="codeIata">Code IATA</label>
+                        <input type="text" id="codeIata" name="codeIata" th:field="*{codeIata}" maxlength="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="codeIcao">Code ICAO</label>
+                        <input type="text" id="codeIcao" name="codeIcao" th:field="*{codeIcao}" maxlength="3" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Modifier</button>
+                        <a href="/compagnies" class="btn-secondary">Annuler</a>
+                    </div>
+                </form>
+            </article>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+            <span>Interface conçue pour ETU003660</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>

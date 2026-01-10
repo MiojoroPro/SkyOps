@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flotte | Compagnie aérienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <h1>Flotte aérienne</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span>Module Avions</span>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+                <p class="badge">Inventaire</p>
+                <h2 class="section-title">Vue d'ensemble</h2>
+                <p class="module-description">Nombre d'appareils suivis</p>
+                <h3 th:text="${avions.size()} + ' avions'"></h3>
+            </article>
+        </section>
+
+        <section class="table-wrapper">
+            <header>
+                <h2 class="section-title">Avions référencés</h2>
+                <a href="/avions/add" class="btn-primary">Ajouter</a>
+            </header>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Compagnie</th>
+                        <th>Modèle</th>
+                        <th>Capacité</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="avion : ${avions}">
+                        <td th:text="${avion.idAvion}"></td>
+                        <td th:text="${avion.compagnie.nom}"></td>
+                        <td th:text="${avion.modele}"></td>
+                        <td th:text="${avion.capacite}"></td>
+                        <td th:text="${avion.statut}"></td>
+                        <td>
+                            <a th:href="@{/avions/edit/{id}(id=${avion.idAvion})}" class="btn-edit">Modifier</a>
+                            <a th:href="@{/avions/delete/{id}(id=${avion.idAvion})}"
+                               class="btn-delete"
+                               onclick="return confirm('Supprimer cet avion ?')">
+                                Supprimer
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+
+                </table>
+            </div>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

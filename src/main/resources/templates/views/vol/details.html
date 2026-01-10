@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Détails du vol ' + ${vol.numeroVol}">Détails Vol</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <h1 th:text="'Détails du vol ' + ${vol.numeroVol}"></h1>
+            </div>
+            <div>
+                <a th:href="@{/reservations/vol/{id}(id=${vol.idVol})}" class="btn btn-primary">Voir réservations</a>
+            </div>
+        </header>
+
+        <section class="table-wrapper">
+            <header>
+                <h2 class="section-title">Exécutions</h2>
+            </header>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Avion</th>
+                        <th>Date / Heure départ</th>
+                        <th>Date / Heure arrivée</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="detail : ${details}">
+                        <td th:text="${detail.idVolDetail}"></td>
+                        <td th:text="${detail.avion != null ? detail.avion.modele : ''}"></td>
+                        <td th:text="${#temporals.format(detail.dateHeureDepart,'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${#temporals.format(detail.dateHeureArrivee,'yyyy-MM-dd HH:mm')}"></td>
+                        <td>
+                            <span th:switch="${detail.statut}">
+                                <span th:case="'PROGRAMME'" class="badge">PROGRAMMÉ</span>
+                                <span th:case="'CONFIRME'" class="badge">CONFIRMÉ</span>
+                                <span th:case="'ANNULÉ'" class="badge">ANNULÉ</span>
+                                <span th:case="*" th:text="${detail.statut}"></span>
+                            </span>
+                        </td>
+                        <td>
+                            <a th:href="@{/reservations/book/{id}(id=${detail.idVolDetail})}" class="btn-primary">Réserver</a>
+                            <a th:href="@{/vol/details/delete/{id}(id=${detail.idVolDetail})}"
+                               class="btn-delete"
+                               onclick="return confirm('Supprimer cette exécution ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    </tbody>
+
+                </table>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <article class="card">
+                <h2 class="section-title">Ajouter une exécution</h2>
+
+                <form th:action="@{/vol/{id}/details/add(id=${vol.idVol})}" th:object="${newDetail}" method="post">
+
+                    <div class="form-group">
+                        <label>Avion</label>
+                        <select th:field="*{avion.idAvion}" required>
+                            <option value="">Sélectionner un avion</option>
+                            <option th:each="av : ${avions}"
+                                    th:value="${av.idAvion}"
+                                    th:text="${av.modele} + ' (' + ${av.compagnie.nom} + ')'">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date / Heure départ</label>
+                        <input type="datetime-local" th:field="*{dateHeureDepart}" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date / Heure arrivée</label>
+                        <input type="datetime-local" th:field="*{dateHeureArrivee}" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <select th:field="*{statut}" required>
+                            <option value="">Sélectionner un statut</option>
+                            <option value="PROGRAMME">PROGRAMMÉ</option>
+                            <option value="CONFIRME">CONFIRMÉ</option>
+                            <option value="ANNULÉ">ANNULÉ</option>
+                            <option value="TERMINE">TERMINÉ</option>
+                            <option value="RETARDE">RETARDÉ</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Ajouter</button>
+                        <a th:href="@{/vol}" class="btn btn-secondary">Retour</a>
+                    </div>
+
+                </form>
+            </article>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

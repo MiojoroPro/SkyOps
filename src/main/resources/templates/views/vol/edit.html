@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${vol.idVol == null} ? 'Ajouter Vol' : 'Modifier Vol'">Ajouter / Modifier Vol</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <h1 th:text="${vol.idVol == null} ? 'Ajouter Vol' : 'Modifier Vol'"></h1>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+
+                <form th:action="@{${vol.idVol == null} ? '/vol/add' : '/vol/edit'}" th:object="${vol}" method="post">
+
+                    <div class="form-group">
+                        <label>Numéro</label>
+                        <input type="text" th:field="*{numeroVol}" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Prix (EUR)</label>
+                        <input type="number" step="0.01" th:field="*{prixBase}" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Compagnie</label>
+                        <select th:field="*{compagnie.idCompagnie}" required>
+                            <option value="">Sélectionner une compagnie</option>
+                            <option th:each="c : ${compagnies}"
+                                    th:value="${c.idCompagnie}"
+                                    th:text="${c.nom}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Aéroport Départ</label>
+                        <select th:field="*{aeroportDepart.idAeroport}" required>
+                            <option value="">Sélectionner un aéroport</option>
+                            <option th:each="a : ${aeroports}"
+                                    th:value="${a.idAeroport}"
+                                    th:text="${a.nom} + ' (' + ${a.ville} + ')'">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Aéroport Arrivée</label>
+                        <select th:field="*{aeroportArrivee.idAeroport}" required>
+                            <option value="">Sélectionner un aéroport</option>
+                            <option th:each="a : ${aeroports}"
+                                    th:value="${a.idAeroport}"
+                                    th:text="${a.nom} + ' (' + ${a.ville} + ')'">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        <a href="/vol" class="btn btn-secondary">Annuler</a>
+                    </div>
+
+                </form>
+
+            </article>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

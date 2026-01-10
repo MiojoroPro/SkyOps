@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réservation</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+    <main class="main-area">
+        <header class="main-header">
+            <div>
+                <h1>Réservation <span th:text="${reservation.numeroReservation}"></span></h1>
+            </div>
+        </header>
+
+        <section class="card">
+            <h3 class="section-title">Détails</h3>
+            <p><strong>Client :</strong> <span th:text="${reservation.utilisateur.nom} + ' ' + ${reservation.utilisateur.prenom}"></span></p>
+            <p><strong>Vol :</strong> <span th:text="${reservation.volDetail.vol.numeroVol}"></span></p>
+            <p><strong>Exécution :</strong> <span th:text="${#temporals.format(reservation.volDetail.dateHeureDepart,'yyyy-MM-dd HH:mm')}"></span></p>
+            <p><strong>Statut réservation :</strong> <span th:text="${reservation.statut}"></span></p>
+
+            <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+                <a th:if="${reservation.statut != 'ANNULÉ' and (paiement == null or paiement.statut != 'PAYE')}" th:href="@{/reservations/pay/{id}(id=${reservation.idReservation})}"
+                   class="btn btn-primary" onclick="return confirm('Payer maintenant ?')">Payer maintenant</a>
+                <a th:if="${reservation.statut != 'ANNULÉ'}" th:href="@{/reservations/cancel/{id}(id=${reservation.idReservation})}"
+                   class="btn-delete" onclick="return confirm('Annuler cette réservation et rembourser si payé ?')">Annuler la réservation</a>
+                <span th:if="${reservation.statut == 'ANNULÉ'}" class="badge">Réservation annulée</span>
+            </div>
+        </section>
+
+        <section class="card">
+            <h3 class="section-title">Paiement</h3>
+            <div th:if="${paiement != null}">
+                <p><strong>Montant :</strong> <span th:text="${paiement.montant}"></span> EUR</p>
+                <p><strong>Statut :</strong> <span th:text="${paiement.statut}"></span></p>
+                <p><strong>Date paiement :</strong> <span th:text="${paiement.datePaiement}"></span></p>
+                <p th:if="${paiement.statut == 'REMBOURSE'}" class="form-help">Un remboursement simulé a été enregistré.</p>
+            </div>
+            <div th:if="${paiement == null}">
+                <p>Aucun paiement enregistré.</p>
+            </div>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>

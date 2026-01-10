@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aéroports | Compagnie aérienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+        <header class="main-header">
+            <div>
+                <p class="eyebrow">Gestion</p>
+                <h1>Aéroports</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span>Module Aéroports</span>
+            </div>
+        </header>
+
+        <section class="table-wrapper">
+            <header>
+                <div>
+                    <p class="badge">Liste</p>
+                    <h2 class="section-title">Aéroports enregistrés</h2>
+                </div>
+                <div>
+                    <a th:href="@{/aeroports/add}" class="btn-primary">Ajouter</a>
+                </div>
+            </header>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Code IATA</th>
+                        <th>Nom</th>
+                        <th>Pays</th>
+                        <th>Ville</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="aeroport : ${aeroports}">
+                        <td th:text="${aeroport.idAeroport}"></td>
+                        <td th:text="${aeroport.codeIata}"></td>
+                        <td th:text="${aeroport.nom}"></td>
+                        <td th:text="${aeroport.pays}"></td>
+                        <td th:text="${aeroport.ville}"></td>
+                        <td>
+                            <a th:href="@{/aeroports/edit/{id}(id=${aeroport.idAeroport})}" class="btn-edit">Modifier</a>
+                            <a th:href="@{/aeroports/delete/{id}(id=${aeroport.idAeroport})}" class="btn-delete"
+                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet aéroport ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>

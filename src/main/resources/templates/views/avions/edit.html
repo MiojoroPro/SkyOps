@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modifier Avion | Compagnie aérienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+</head>
+
+<body>
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+        <header class="main-header">
+            <div>
+                <h1>Modifier un avion</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span>Module Avions</span>
+            </div>
+        </header>
+
+        <section class="form-wrapper">
+            <form th:action="@{/avions/edit/{id}(id=${avion.idAvion})}"
+                  method="post"
+                  th:object="${avion}">
+
+                <!-- Compagnie -->
+                <div class="form-group">
+                    <label>Compagnie</label>
+                    <select th:field="*{compagnie}" required>
+                        <option value="">Sélectionnez une compagnie</option>
+                        <option th:each="c : ${compagnies}"
+                                th:value="${c.idCompagnie}"
+                                th:text="${c.nom}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Modèle -->
+                <div class="form-group">
+                    <label>Modèle</label>
+                    <input type="text" th:field="*{modele}" required />
+                </div>
+
+                <!-- Capacité -->
+                <div class="form-group">
+                    <label>Capacité</label>
+                    <input type="number" th:field="*{capacite}" required />
+                </div>
+
+                <!-- Statut (si présent dans l'entité Avion) -->
+                <div class="form-group">
+                    <label>Statut</label>
+                    <select th:field="*{statut}" required>
+                        <option value="DISPONIBLE">DISPONIBLE</option>
+                        <option value="MAINTENANCE">MAINTENANCE</option>
+                        <option value="HORS_SERVICE">HORS SERVICE</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        Modifier l’avion
+                    </button>
+                    <a href="/avions" class="btn-secondary">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+            <span>Interface conçue pour ETU003660</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>

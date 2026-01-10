@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord | Compagnie aérienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+        <header class="main-header">
+            <div>
+                <h1>Tableau de bord</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span th:text="${username}">Utilisateur</span>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card greeting-card">
+                <h2>Bienvenue à bord</h2>
+                <p>Surveillez vos compagnies, flottes et réservations dans un environnement pensé pour les équipes</p>
+                <p class="module-description" th:if="${message}" th:text="${message}"></p>
+            </article>
+            <article class="card quick-links">
+                <h3>Accès rapides</h3>
+                <div class="pill-group">
+                    <a href="/compagnies" class="pill-link">Compagnies</a>
+                    <a href="/avions" class="pill-link">Avions</a>
+                    <a href="/vol" class="pill-link">Vols</a>
+                </div>
+            </article>
+        </section>
+
+        <section class="table-wrapper">
+            <header>
+                <div>
+                    <p class="badge">Synthèse</p>
+                    <h2 class="section-title">Modules disponibles</h2>
+                </div>
+                <span class="module-description">Choisissez un module pour poursuivre votre travail</span>
+            </header>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <tbody>
+                    <tr>
+                        <td>Gestion des compagnies</td>
+                        <td>Suivi des codes IATA / ICAO</td>
+                        <td><a href="/compagnies">Ouvrir</a></td>
+                    </tr>
+                    <tr>
+                        <td>Gestion de la flotte</td>
+                        <td>Capacités, immatriculations et affectations</td>
+                        <td><a href="/avions">Ouvrir</a></td>
+                    </tr>
+                    <tr>
+                        <td>Gestion des vols</td>
+                        <td>Programmation et suivi des vols</td>
+                        <td><a href="/vol">Ouvrir</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vols | Compagnie aérienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <h1>Vols</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span>Module Vols</span>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+                <p class="badge">Inventaire</p>
+                <h2 class="section-title">Vue d'ensemble</h2>
+                <p class="module-description">Nombre de vols suivis</p>
+                <h3 th:text="${vols.size()} + ' vols'"></h3>
+            </article>
+        </section>
+
+        <section class="table-wrapper">
+            <header>
+                <h2 class="section-title">Vols référencés</h2>
+                <a href="/vol/add" class="btn-primary">Ajouter</a>
+            </header>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Numéro</th>
+                        <th>Départ</th>
+                        <th>Arrivée</th>
+                        <th>Prix</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="vol : ${vols}">
+                        <td th:text="${vol.idVol}"></td>
+                        <td th:text="${vol.numeroVol}"></td>
+                        <td th:text="${vol.aeroportDepart.nom}"></td>
+                        <td th:text="${vol.aeroportArrivee.nom}"></td>
+                        <td th:text="${vol.prixBase}"></td>
+                        <td>
+                            <a th:href="@{/vol/{id}/details(id=${vol.idVol})}" class="btn-primary">Détails</a>
+                            <a th:href="@{/vol/edit/{id}(id=${vol.idVol})}" class="btn-edit">Modifier</a>
+                            <a th:href="@{/vol/delete/{id}(id=${vol.idVol})}" class="btn-delete" onclick="return confirm('Supprimer ce vol ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    </tbody>
+
+                </table>
+            </div>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

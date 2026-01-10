@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservations | Vol</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+        <header class="main-header">
+            <div>
+                <h1>Réservations du vol <span th:text="${volId}"></span></h1>
+            </div>
+        </header>
+
+        <section class="table-wrapper">
+            <header>
+                <h2 class="section-title">Liste des réservations</h2>
+            </header>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Numéro</th>
+                        <th>Client</th>
+                        <th>Exécution</th>
+                        <th>Date réservation</th>
+                        <th>Statut</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${reservations}">
+                        <td th:text="${r.idReservation}"></td>
+                        <td th:text="${r.numeroReservation}"></td>
+                        <td th:text="${r.utilisateur != null ? r.utilisateur.nom + ' ' + r.utilisateur.prenom : ''}"></td>
+                        <td th:text="${r.volDetail != null ? #temporals.format(r.volDetail.dateHeureDepart,'yyyy-MM-dd HH:mm') : ''}"></td>
+                        <td th:text="${#temporals.format(r.dateReservation,'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${r.statut}"></td>
+                        <td>
+                            <span th:if="${r.paiement != null}" th:text="${r.paiement.statut} + ' (' + ${r.paiement.montant} + ' EUR)'"></span>
+                            <span th:if="${r.paiement == null}">Aucun</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/reservations/{id}(id=${r.idReservation})}" class="btn btn-primary">Voir</a>
+                            <a th:if="${r.statut != 'ANNULÉ' and (r.paiement == null or r.paiement.statut != 'PAYE')}" th:href="@{/reservations/pay/{id}(id=${r.idReservation})}" class="btn btn-primary" onclick="return confirm('Effectuer le paiement maintenant ?')">Payer</a>
+                            <a th:if="${r.statut != 'ANNULÉ'}" th:href="@{/reservations/cancel/{id}(id=${r.idReservation})}" class="btn-delete" onclick="return confirm('Annuler cette réservation ?')">Annuler</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

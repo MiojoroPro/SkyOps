@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compagnies | Compagnie aérienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+        <header class="main-header">
+            <div>
+                <p class="eyebrow">Fenitra ETU003660</p>
+                <h1>Compagnies aériennes</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span>Module Compagnies</span>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+                <p class="badge">Inventaire</p>
+                <h2 class="section-title">Vue d'ensemble</h2>
+                <p class="module-description">Nombre de compagnies gérées</p>
+                <h3 th:text="${compagnies == null ? '0 compagnie' : compagnies.size() + ' compagnies'}"></h3>
+            </article>
+        </section>
+
+        <section class="table-wrapper">
+            <header>
+                <div>
+                    <p class="badge">Liste</p>
+                    <h2 class="section-title">Répertoire compagnies</h2>
+                </div>
+                <div>
+                    <a href="/compagnies/add" class="btn-primary">Ajouter</a>
+                </div>
+            </header>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Pays</th>
+                        <th>Code IATA</th>
+                        <th>Code ICAO</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="compagnie : ${compagnies}">
+                        <td th:text="${compagnie.idCompagnie}"></td>
+                        <td th:text="${compagnie.nom}"></td>
+                        <td th:text="${compagnie.pays}"></td>
+                        <td th:text="${compagnie.codeIata}"></td>
+                        <td th:text="${compagnie.codeIcao}"></td>
+                        <td>
+                            <a th:href="@{/compagnies/edit/{id}(id=${compagnie.idCompagnie})}" class="btn-edit">Modifier</a>
+                            <a th:href="@{/compagnies/delete/{id}(id=${compagnie.idCompagnie})}" class="btn-delete" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette compagnie ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+            <span>Interface conçue pour ETU003660</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>

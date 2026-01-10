@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réserver un Vol</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+    <div class="app-shell">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-label">AVIATION</div>
+                <h1 class="brand-title">AirManager</h1>
+                <p class="brand-subtitle">Système de gestion</p>
+            </div>
+            <nav class="menu">
+                <a href="/dashboard" class="menu-link">Tableau de bord</a>
+                <a href="/compagnie" class="menu-link">Compagnies</a>
+                <a href="/aeroport" class="menu-link">Aéroports</a>
+                <a href="/avion" class="menu-link">Avions</a>
+                <a href="/vol" class="menu-link">Vols</a>
+                <a href="/vol-detail" class="menu-link">Détails Vols</a>
+                <a href="/passager" class="menu-link">Passagers</a>
+                <a href="/reservation/vols-disponibles" class="menu-link is-active">Réserver un Vol</a>
+                <a href="/reservation/mes-reservations" class="menu-link">Mes Réservations</a>
+                <a href="/logout" class="menu-link logout">Déconnexion</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-area">
+            <header class="main-header">
+                <div>
+                    <p class="eyebrow">NOUVELLE RÉSERVATION</p>
+                    <h1>Réserver un Vol</h1>
+                </div>
+                <div class="user-chip">
+                    <span class="status-dot"></span>
+                    <span th:text="${session.username}">Admin</span>
+                </div>
+            </header>
+
+            <!-- Informations du vol -->
+            <div class="card">
+                <span class="badge">INFORMATIONS DU VOL</span>
+                <h2 class="section-title" th:text="${volDetail.vol.numeroVol}">AF701</h2>
+                <div class="content-section">
+                    <div>
+                        <p><strong>Compagnie:</strong> <span th:text="${volDetail.vol.compagnie.nom}">Air France</span></p>
+                        <p><strong>Départ:</strong> <span th:text="${volDetail.vol.aeroportDepart.nom + ' (' + volDetail.vol.aeroportDepart.ville + ')'}">CDG (Paris)</span></p>
+                        <p><strong>Arrivée:</strong> <span th:text="${volDetail.vol.aeroportArrivee.nom + ' (' + volDetail.vol.aeroportArrivee.ville + ')'}">LHR (London)</span></p>
+                    </div>
+                    <div>
+                        <p><strong>Date Départ:</strong> <span th:text="${#temporals.format(volDetail.dateDepart, 'dd/MM/yyyy HH:mm')}">10/01/2026 08:00</span></p>
+                        <p><strong>Date Arrivée:</strong> <span th:text="${#temporals.format(volDetail.dateArrivee, 'dd/MM/yyyy HH:mm')}">10/01/2026 10:30</span></p>
+                        <p><strong>Avion:</strong> <span th:text="${volDetail.avion.modele + ' (Capacité: ' + volDetail.avion.capacite + ')'}">Airbus A320</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire de réservation -->
+            <div class="card">
+                <span class="badge">DÉTAILS DE LA RÉSERVATION</span>
+                <h2 class="section-title">Informations Passager</h2>
+                
+                <form class="form" action="/reservation/reserver" method="post">
+                    <input type="hidden" name="idVolDetail" th:value="${volDetail.idVolDetail}">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                Passager <span class="required">*</span>
+                            </label>
+                            <select name="idPassager" required>
+                                <option value="">Sélectionnez un passager</option>
+                                <option th:each="passager : ${passagers}" 
+                                        th:value="${passager.idPassager}"
+                                        th:text="${passager.nom + ' ' + passager.prenom + ' (' + passager.email + ')'}">
+                                    Doe John
+                                </option>
+                            </select>
+                            <span class="form-help">Sélectionnez le passager pour cette réservation</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                Classe <span class="required">*</span>
+                            </label>
+                            <select name="idPrixVol" required>
+                                <option value="">Sélectionnez une classe</option>
+                                <option th:each="prixVol : ${prixVols}" 
+                                        th:value="${prixVol.idPrix}"
+                                        th:text="${prixVol.classe + ' - ' + prixVol.prix + ' €'}">
+                                    Économie - 150.00 €
+                                </option>
+                            </select>
+                            <span class="form-help">Choisissez la classe de voyage</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            Numéro de Siège <span class="required">*</span>
+                        </label>
+                        <input type="text" 
+                               name="siege" 
+                               placeholder="Ex: 12A, 5C, 22F" 
+                               required
+                               pattern="[0-9]{1,2}[A-F]">
+                        <span class="form-help">Format: Numéro + Lettre (Ex: 12A, 5C)</span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            Confirmer la Réservation
+                        </button>
+                        <a href="/reservation/vols-disponibles" class="btn btn-secondary">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <footer class="main-footer">
+                <span>&copy; 2026 AirManager. Tous droits réservés.</span>
+                <span>Version 1.0</span>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>
