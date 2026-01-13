@@ -18,7 +18,7 @@
                 <h1 th:text="'Détails du vol ' + ${vol.numeroVol}"></h1>
             </div>
             <div>
-                <a th:href="@{/reservations/vol/{id}(id=${vol.idVol})}" class="btn btn-primary">Voir réservations</a>
+                <a th:href="@{/reservations/vol/{id}(id=${vol.idVol})}" class="btn btn-apply">Voir réservations</a>
             </div>
         </header>
 
@@ -55,7 +55,7 @@
                             </span>
                         </td>
                         <td>
-                            <a th:href="@{/reservations/book/{id}(id=${detail.idVolDetail})}" class="btn-primary">Réserver</a>
+                            <a th:href="@{/reservations/book/{id}(id=${detail.idVolDetail})}" class="btn btn-edit">Réserver</a>
                             <a th:href="@{/vol/details/delete/{id}(id=${detail.idVolDetail})}"
                                class="btn-delete"
                                onclick="return confirm('Supprimer cette exécution ?')">Supprimer</a>
@@ -107,7 +107,7 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Ajouter</button>
+                        <button type="submit" class="btn btn-edit">Ajouter</button>
                         <a th:href="@{/vol}" class="btn btn-secondary">Retour</a>
                     </div>
 

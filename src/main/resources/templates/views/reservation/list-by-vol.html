@@ -48,8 +48,8 @@
                             <span th:if="${r.paiement == null}">Aucun</span>
                         </td>
                         <td>
-                            <a th:href="@{/reservations/{id}(id=${r.idReservation})}" class="btn btn-primary">Voir</a>
-                            <a th:if="${r.statut != 'ANNULÉ' and (r.paiement == null or r.paiement.statut != 'PAYE')}" th:href="@{/reservations/pay/{id}(id=${r.idReservation})}" class="btn btn-primary" onclick="return confirm('Effectuer le paiement maintenant ?')">Payer</a>
+                            <a th:href="@{/reservations/{id}(id=${r.idReservation})}" class="btn btn-apply">Voir</a>
+                            <a th:if="${r.statut != 'ANNULÉ' and (r.paiement == null or r.paiement.statut != 'PAYE')}" th:href="@{/reservations/pay/{id}(id=${r.idReservation})}" class="btn btn-save" onclick="return confirm('Effectuer le paiement maintenant ?')">Payer</a>
                             <a th:if="${r.statut != 'ANNULÉ'}" th:href="@{/reservations/cancel/{id}(id=${r.idReservation})}" class="btn-delete" onclick="return confirm('Annuler cette réservation ?')">Annuler</a>
                         </td>
                     </tr>

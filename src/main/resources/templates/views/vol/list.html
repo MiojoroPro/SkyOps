@@ -35,7 +35,7 @@
         <section class="table-wrapper">
             <header>
                 <h2 class="section-title">Vols référencés</h2>
-                <a href="/vol/add" class="btn-primary">Ajouter</a>
+                <a href="/vol/add" class="btn btn-add">Ajouter</a>
             </header>
 
             <div class="table-responsive">
@@ -59,7 +59,7 @@
                         <td th:text="${vol.aeroportArrivee.nom}"></td>
                         <td th:text="${vol.prixBase}"></td>
                         <td>
-                            <a th:href="@{/vol/{id}/details(id=${vol.idVol})}" class="btn-primary">Détails</a>
+                            <a th:href="@{/vol/{id}/details(id=${vol.idVol})}" class="btn btn-edit">Détails</a>
                             <a th:href="@{/vol/edit/{id}(id=${vol.idVol})}" class="btn-edit">Modifier</a>
                             <a th:href="@{/vol/delete/{id}(id=${vol.idVol})}" class="btn-delete" onclick="return confirm('Supprimer ce vol ?')">Supprimer</a>
                         </td>

@@ -608,6 +608,74 @@ a {
     border-top: 1px solid var(--border-light);
 }
 
+/* Action Buttons - streamlined modern variants */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    background: var(--primary);
+    transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.12s ease;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-apply {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid rgba(37, 99, 235, 0.08);
+    box-shadow: none;
+}
+
+.btn-add {
+    background: linear-gradient(90deg, var(--success) 0%, #059669 100%);
+    color: white;
+}
+
+.btn-save {
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.btn-edit {
+    background: transparent;
+    color: var(--primary);
+    border: 1px dashed rgba(37, 99, 235, 0.08);
+}
+
+.btn-delete {
+    background: linear-gradient(90deg, var(--danger) 100%, #2657dc 0%);
+    color: white;
+    border: none;
+}
+
+/* Ensure default link/visited/focus state stays white */
+.btn-delete, .btn-delete:link, .btn-delete:visited, .btn-delete:focus {
+    color: white;
+    text-decoration: none;
+}
+
+/* Delete: white text on red, on hover show blue highlight and blue text (previous behavior) */
+.btn-delete:hover, .btn-delete:active {
+    background: rgba(37, 99, 235, 0.04);
+    color: var(--primary);
+    box-shadow: none;
+    transform: translateY(-1px);
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn-apply:hover { background: rgba(37, 99, 235, 0.04); }
+.btn-add:hover, .btn-save:hover { filter: brightness(0.95); }
+.btn-edit:hover { background: rgba(37, 99, 235, 0.03); }
+.btn:focus { outline: none; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08); }
+
 /* Form Layout Variations */
 .form-row {
     display: grid;

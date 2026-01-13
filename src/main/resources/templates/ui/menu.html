@@ -17,6 +17,8 @@
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/vol')} ? ' is-active' : ''">Vols</a>
         <a class="menu-link" href="/reservations"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/reservations')} ? ' is-active' : ''">Réservations</a>
+        <a class="menu-link" href="/chiffre-affaire"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/chiffre-affaire')} ? ' is-active' : ''">Chiffre d'affaires</a>
         <a class="menu-link logout" href="/logout">Déconnexion</a>
     </nav>
 </aside>
