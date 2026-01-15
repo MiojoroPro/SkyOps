@@ -23,6 +23,9 @@ public class Reservation {
     @Column(name = "numero_reservation")
     private String numeroReservation;
 
+    @Column(name = "classe")
+    private String classe;
+
     private String statut;
 
     @ManyToOne

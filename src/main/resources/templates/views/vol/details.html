@@ -19,6 +19,7 @@
             </div>
             <div>
                 <a th:href="@{/reservations/vol/{id}(id=${vol.idVol})}" class="btn btn-apply">Voir réservations</a>
+                <a th:href="@{/vol/{id}/max-revenue(id=${vol.idVol})}" class="btn btn-apply">Recette max</a>
             </div>
         </header>
 
@@ -35,6 +36,7 @@
                         <th>Avion</th>
                         <th>Date / Heure départ</th>
                         <th>Date / Heure arrivée</th>
+                        <th>Recette max</th>
                         <th>Statut</th>
                         <th>Actions</th>
                     </tr>
@@ -46,6 +48,7 @@
                         <td th:text="${detail.avion != null ? detail.avion.modele : ''}"></td>
                         <td th:text="${#temporals.format(detail.dateHeureDepart,'yyyy-MM-dd HH:mm')}"></td>
                         <td th:text="${#temporals.format(detail.dateHeureArrivee,'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${detail.maxRevenue != null ? #numbers.formatDecimal(detail.maxRevenue,0,0) + ' MGA' : '—'}"></td>
                         <td>
                             <span th:switch="${detail.statut}">
                                 <span th:case="'PROGRAMME'" class="badge">PROGRAMMÉ</span>

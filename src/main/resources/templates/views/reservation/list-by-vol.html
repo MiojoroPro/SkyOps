@@ -40,6 +40,7 @@
                         <td th:text="${r.idReservation}"></td>
                         <td th:text="${r.numeroReservation}"></td>
                         <td th:text="${r.utilisateur != null ? r.utilisateur.nom + ' ' + r.utilisateur.prenom : ''}"></td>
+                        <td th:text="${r.classe}"></td>
                         <td th:text="${r.volDetail != null ? #temporals.format(r.volDetail.dateHeureDepart,'yyyy-MM-dd HH:mm') : ''}"></td>
                         <td th:text="${#temporals.format(r.dateReservation,'yyyy-MM-dd HH:mm')}"></td>
                         <td th:text="${r.statut}"></td>

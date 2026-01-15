@@ -45,10 +45,22 @@
                     <input type="text" th:field="*{modele}" required />
                 </div>
 
-                <!-- Capacité -->
+                <!-- Capacité économique -->
                 <div class="form-group">
-                    <label>Capacité</label>
-                    <input type="number" th:field="*{capacite}" required />
+                    <label>Capacité Économique</label>
+                    <input type="number" th:field="*{capaciteEconomique}" min="0" required />
+                </div>
+
+                <!-- Capacité première -->
+                <div class="form-group">
+                    <label>Capacité Première</label>
+                    <input type="number" th:field="*{capacitePremiere}" min="0" required />
+                </div>
+
+                <!-- Capacité premium -->
+                <div class="form-group">
+                    <label>Capacité Premium</label>
+                    <input type="number" th:field="*{capacitePremium}" min="0" required />
                 </div>
 
                 <!-- Statut (si présent dans l'entité Avion) -->
@@ -65,7 +77,7 @@
                     <button type="submit" class="btn btn-save">
                         Modifier l’avion
                     </button>
-                    <a href="/avions" class="btn-secondary">
+                    <a href="/avions" class="btn btn-secondary">
                         Annuler
                     </a>
                 </div>

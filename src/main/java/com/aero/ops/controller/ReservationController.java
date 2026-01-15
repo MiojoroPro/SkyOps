@@ -55,7 +55,8 @@ public class ReservationController {
     @PostMapping("/book/{detailId}")
     public String book(@PathVariable Long detailId,
                        @ModelAttribute Reservation reservation,
-                       @RequestParam(value = "payerMaintenant", required = false) boolean payerMaintenant) {
+                       @RequestParam(value = "payerMaintenant", required = false) boolean payerMaintenant,
+                       Model model) {
         VolDetail detail = volDetailService.getById(detailId);
         if (detail == null) {
             return "redirect:/vol";
@@ -72,21 +73,37 @@ public class ReservationController {
         } else {
             reservation.setStatut("EN_ATTENTE");
         }
-        Reservation saved = reservationService.create(reservation);
 
-        // Create paiement record (simulation)
-        Paiement paiement = new Paiement();
-        paiement.setMontant(detail.getVol().getPrixBase());
-        if (payerMaintenant) {
-            paiement.setStatut("PAYE");
-            paiement.setDatePaiement(LocalDateTime.now());
-        } else {
-            paiement.setStatut("NON_PAYE");
+        try {
+            Reservation saved = reservationService.create(reservation);
+
+            // Create paiement record (simulation) with class-specific price
+            Paiement paiement = new Paiement();
+            double montant = 0.0;
+            if ("ECONOMIQUE".equalsIgnoreCase(reservation.getClasse())) {
+                montant = detail.getPrixEconomique() != null ? detail.getPrixEconomique() : 0.0;
+            } else if ("PREMIERE".equalsIgnoreCase(reservation.getClasse())) {
+                montant = detail.getPrixPremiere() != null ? detail.getPrixPremiere() : 0.0;
+            } else if ("PREMIUM".equalsIgnoreCase(reservation.getClasse())) {
+                montant = detail.getPrixPremium() != null ? detail.getPrixPremium() : 0.0;
+            }
+            paiement.setMontant(montant);
+            if (payerMaintenant) {
+                paiement.setStatut("PAYE");
+                paiement.setDatePaiement(LocalDateTime.now());
+            } else {
+                paiement.setStatut("NON_PAYE");
+            }
+            paiement.setReservation(saved);
+            paiementService.create(paiement);
+
+            return "redirect:/reservations/user/" + saved.getUtilisateur().getIdUtilisateur();
+        } catch (IllegalStateException ex) {
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("detail", detail);
+            model.addAttribute("utilisateurs", utilisateurService.getAll());
+            return "views/reservation/book";
         }
-        paiement.setReservation(saved);
-        paiementService.create(paiement);
-
-        return "redirect:/reservations/user/" + saved.getUtilisateur().getIdUtilisateur();
     }
 
     // List reservations (with optional filters)
@@ -152,12 +169,30 @@ public class ReservationController {
             p.setStatut("PAYE");
             p.setDatePaiement(LocalDateTime.now());
             if (r.getVolDetail() != null) {
-                p.setMontant(r.getVolDetail().getVol().getPrixBase());
+                double montant = 0.0;
+                if ("ECONOMIQUE".equalsIgnoreCase(r.getClasse())) {
+                    montant = r.getVolDetail().getPrixEconomique() != null ? r.getVolDetail().getPrixEconomique() : 0.0;
+                } else if ("PREMIERE".equalsIgnoreCase(r.getClasse())) {
+                    montant = r.getVolDetail().getPrixPremiere() != null ? r.getVolDetail().getPrixPremiere() : 0.0;
+                } else if ("PREMIUM".equalsIgnoreCase(r.getClasse())) {
+                    montant = r.getVolDetail().getPrixPremium() != null ? r.getVolDetail().getPrixPremium() : 0.0;
+                }
+                p.setMontant(montant);
             }
             paiementService.update(p);
         }, () -> {
             com.aero.ops.model.Paiement p = new com.aero.ops.model.Paiement();
-            p.setMontant(r.getVolDetail() != null ? r.getVolDetail().getVol().getPrixBase() : 0.0);
+            double montant = 0.0;
+            if (r.getVolDetail() != null) {
+                if ("ECONOMIQUE".equalsIgnoreCase(r.getClasse())) {
+                    montant = r.getVolDetail().getPrixEconomique() != null ? r.getVolDetail().getPrixEconomique() : 0.0;
+                } else if ("PREMIERE".equalsIgnoreCase(r.getClasse())) {
+                    montant = r.getVolDetail().getPrixPremiere() != null ? r.getVolDetail().getPrixPremiere() : 0.0;
+                } else if ("PREMIUM".equalsIgnoreCase(r.getClasse())) {
+                    montant = r.getVolDetail().getPrixPremium() != null ? r.getVolDetail().getPrixPremium() : 0.0;
+                }
+            }
+            p.setMontant(montant);
             p.setStatut("PAYE");
             p.setDatePaiement(LocalDateTime.now());
             p.setReservation(r);

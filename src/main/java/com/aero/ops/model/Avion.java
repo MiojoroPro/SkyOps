@@ -16,7 +16,21 @@ public class Avion {
     private Long idAvion;
 
     private String modele;
-    private int capacite;
+
+    @Column(name = "capacite_economique")
+    private int capaciteEconomique;
+
+    @Column(name = "capacite_premiere")
+    private int capacitePremiere;
+
+    @Column(name = "capacite_premium")
+    private int capacitePremium;
+
+    // Computed total - optional, not stored in DB (database has generated column)
+    public int getCapaciteTotale() {
+        return capaciteEconomique + capacitePremiere + capacitePremium;
+    }
+
     private String statut;
 
     @ManyToOne

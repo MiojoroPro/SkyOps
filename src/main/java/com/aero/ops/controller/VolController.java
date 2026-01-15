@@ -107,6 +107,62 @@ public class VolController {
         return "views/vol/details";
     }
 
+    // Recette maximale possible pour un vol (somme des exécutions)
+    @GetMapping("/{id}/max-revenue")
+    public String maxRevenue(@PathVariable Long id, Model model) {
+        Vol vol = volService.getById(id);
+        java.util.List<VolDetail> details = volDetailService.getByVol(vol);
+        double total = details.stream().mapToDouble(d -> d.getMaxRevenue() != null ? d.getMaxRevenue() : 0.0).sum();
+        model.addAttribute("vol", vol);
+        model.addAttribute("details", details);
+        model.addAttribute("totalMaxRevenue", total);
+        return "views/vol/max-revenue";
+    }
+
+    // Liste des vols avec leur recette maximale potentielle (avec filtres)
+    @GetMapping("/max-revenue")
+    public String maxRevenueList(@RequestParam(name = "startDate", required = false) String startDateStr,
+                                 @RequestParam(name = "endDate", required = false) String endDateStr,
+                                 @RequestParam(name = "avionId", required = false) Long avionId,
+                                 Model model) {
+        java.time.LocalDateTime parsedStart = null;
+        java.time.LocalDateTime parsedEnd = null;
+        try {
+            if (startDateStr != null && !startDateStr.isBlank()) {
+                java.time.LocalDate sd = java.time.LocalDate.parse(startDateStr);
+                parsedStart = sd.atStartOfDay();
+            }
+            if (endDateStr != null && !endDateStr.isBlank()) {
+                java.time.LocalDate ed = java.time.LocalDate.parse(endDateStr);
+                parsedEnd = ed.atTime(23,59,59,999000000);
+            }
+        } catch (java.time.format.DateTimeParseException ex) {
+            // ignore invalid parse, leave filters null
+        }
+
+        final java.time.LocalDateTime start = parsedStart;
+        final java.time.LocalDateTime end = parsedEnd;
+        java.util.List<Vol> vols = volService.getAll();
+        java.util.Map<Long, Double> totals = new java.util.HashMap<>();
+        for (Vol v : vols) {
+            java.util.List<VolDetail> details = volDetailService.getByVol(v);
+            double sum = details.stream()
+                    .filter(d -> (start == null || (d.getDateHeureDepart() != null && !d.getDateHeureDepart().isBefore(start)))
+                            && (end == null || (d.getDateHeureDepart() != null && !d.getDateHeureDepart().isAfter(end)))
+                            && (avionId == null || (d.getAvion() != null && d.getAvion().getIdAvion().equals(avionId))))
+                    .mapToDouble(d -> d.getMaxRevenue() != null ? d.getMaxRevenue() : 0.0)
+                    .sum();
+            totals.put(v.getIdVol(), sum);
+        }
+        model.addAttribute("vols", vols);
+        model.addAttribute("totals", totals);
+        model.addAttribute("startDate", startDateStr);
+        model.addAttribute("endDate", endDateStr);
+        model.addAttribute("avionId", avionId);
+        model.addAttribute("avions", avionService.getAll());
+        return "views/vol/max-revenue-list";
+    }
+
     // Ajouter un VolDetail
     @PostMapping("/{id}/details/add")
     public String addVolDetail(@PathVariable Long id, @ModelAttribute VolDetail volDetail) {

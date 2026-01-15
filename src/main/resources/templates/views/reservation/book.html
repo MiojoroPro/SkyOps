@@ -25,9 +25,19 @@
                 <p><strong>Avion :</strong> <span th:text="${detail.avion.modele}"></span></p>
                 <p><strong>Départ :</strong> <span th:text="${#temporals.format(detail.dateHeureDepart,'yyyy-MM-dd HH:mm')}"></span></p>
                 <p><strong>Arrivée :</strong> <span th:text="${#temporals.format(detail.dateHeureArrivee,'yyyy-MM-dd HH:mm')}"></span></p>
-                <p><strong>Prix :</strong> <span th:text="${detail.vol.prixBase}"></span> EUR</p>
+                <p><strong>Prix éco :</strong>
+                    <span th:text="${detail.prixEconomique != null ? #numbers.formatDecimal(detail.prixEconomique,0,0) + ' MGA' : '—'}"></span>
+                    — <em th:text="'Places restantes: ' + (detail.placesEcoRestantes != null ? detail.placesEcoRestantes : 0)"></em></p>
+                <p><strong>Prix première :</strong>
+                    <span th:text="${detail.prixPremiere != null ? #numbers.formatDecimal(detail.prixPremiere,0,0) + ' MGA' : '—'}"></span>
+                    — <em th:text="'Places restantes: ' + (detail.placesPremiereRestantes != null ? detail.placesPremiereRestantes : 0)"></em></p>
+                <p><strong>Prix premium :</strong>
+                    <span th:text="${detail.prixPremium != null ? #numbers.formatDecimal(detail.prixPremium,0,0) + ' MGA' : '—'}"></span>
+                    — <em th:text="'Places restantes: ' + (detail.placesPremiumRestantes != null ? detail.placesPremiumRestantes : 0)"></em></p>
+                <p><strong>Recette maximale:</strong> <span th:text="${detail.maxRevenue != null ? #numbers.formatDecimal(detail.maxRevenue,0,0) + ' MGA' : '—'}"></span></p>
 
                 <h3 class="section-title">Formulaire de réservation</h3>
+                <div th:if="${error}" class="form-error" th:text="${error}"></div>
                 <form th:action="@{/reservations/book/{id}(id=${detail.idVolDetail})}" th:object="${reservation}" method="post">
 
                     <div class="form-group">
@@ -38,6 +48,17 @@
                                     th:value="${u.idUtilisateur}"
                                     th:text="${u.nom} + ' ' + ${u.prenom} + ' (' + ${u.email} + ')'"></option>
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Classe</label>
+                        <select th:field="*{classe}" required>
+                            <option value="">Sélectionner la classe</option>
+                            <option value="ECONOMIQUE">Économique</option>
+                            <option value="PREMIERE">Première</option>
+                            <option value="PREMIUM">Premium</option>
+                        </select>
+                        <span class="form-help">Choisissez la classe du siège à réserver</span>
                     </div>
 
                     <div class="form-group">

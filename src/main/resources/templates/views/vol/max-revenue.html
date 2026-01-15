@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Recette maximale - ' + ${vol.numeroVol}">Recette maximale</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+        <header class="main-header">
+            <div>
+                <h1 th:text="'Recette maximale pour le vol ' + ${vol.numeroVol}">Recette maximale</h1>
+            </div>
+            <div>
+                <a th:href="@{/vol/{id}/details(id=${vol.idVol})}" class="btn btn-apply">Retour aux détails</a>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+                <p class="section-title">Résumé</p>
+                <p><strong>Vol :</strong> <span th:text="${vol.numeroVol}"></span></p>
+                <p><strong>Compagnie :</strong> <span th:text="${vol.compagnie != null ? vol.compagnie.nom : '-'}"></span></p>
+
+                <h3 class="section-title">Recette par exécution</h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Avion</th>
+                            <th>Départ</th>
+                            <th>Arrivée</th>
+                            <th>Recette max</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="detail : ${details}">
+                            <td th:text="${detail.idVolDetail}"></td>
+                            <td th:text="${detail.avion != null ? detail.avion.modele : '-'}"></td>
+                            <td th:text="${#temporals.format(detail.dateHeureDepart,'yyyy-MM-dd HH:mm')}"></td>
+                            <td th:text="${#temporals.format(detail.dateHeureArrivee,'yyyy-MM-dd HH:mm')}"></td>
+                            <td th:text="${detail.maxRevenue != null ? #numbers.formatDecimal(detail.maxRevenue,0,0) + ' MGA' : '—'}"></td>
+                        </tr>
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td colspan="4"><strong>Total potentiel</strong></td>
+                            <td><strong th:text="${totalMaxRevenue != null ? #numbers.formatDecimal(totalMaxRevenue,0,0) + ' MGA' : '—'}"></strong></td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+            </article>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

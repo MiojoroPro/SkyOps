@@ -41,8 +41,21 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Capacité</label>
-                        <input type="number" th:field="*{capacite}" required>
+                        <label>Capacité Économique</label>
+                        <input type="number" th:field="*{capaciteEconomique}" min="0" required>
+                        <span class="form-help">Nombre de sièges en classe économique</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Capacité Première</label>
+                        <input type="number" th:field="*{capacitePremiere}" min="0" required>
+                        <span class="form-help">Nombre de sièges en première classe</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Capacité Premium</label>
+                        <input type="number" th:field="*{capacitePremium}" min="0" required>
+                        <span class="form-help">Nombre de sièges en classe premium</span>
                     </div>
 
                     <div class="form-group">
@@ -57,7 +70,7 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-add">Ajouter</button>
-                        <a href="/avions" class="btn-secondary">Annuler</a>
+                        <a href="/avions" class="btn btn-secondary">Annuler</a>
                     </div>
 
                 </form>

@@ -21,6 +21,7 @@
             <p><strong>Client :</strong> <span th:text="${reservation.utilisateur.nom} + ' ' + ${reservation.utilisateur.prenom}"></span></p>
             <p><strong>Vol :</strong> <span th:text="${reservation.volDetail.vol.numeroVol}"></span></p>
             <p><strong>Exécution :</strong> <span th:text="${#temporals.format(reservation.volDetail.dateHeureDepart,'yyyy-MM-dd HH:mm')}"></span></p>
+            <p><strong>Classe :</strong> <span th:text="${reservation.classe}"></span></p>
             <p><strong>Statut réservation :</strong> <span th:text="${reservation.statut}"></span></p>
 
             <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">

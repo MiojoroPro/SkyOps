@@ -23,6 +23,15 @@ public class Vol {
     @Column(name = "prix_base", nullable = false)
     private double prixBase;
 
+    @Column(name = "prix_economique")
+    private Double prixEconomique;
+
+    @Column(name = "prix_premiere")
+    private Double prixPremiere;
+
+    @Column(name = "prix_premium")
+    private Double prixPremium;
+
     @ManyToOne
     @JoinColumn(name = "id_compagnie", nullable = false)
     private Compagnie compagnie;

@@ -53,9 +53,9 @@
                         <p><strong>Arrivée:</strong> <span th:text="${volDetail.vol.aeroportArrivee.nom + ' (' + volDetail.vol.aeroportArrivee.ville + ')'}">LHR (London)</span></p>
                     </div>
                     <div>
-                        <p><strong>Date Départ:</strong> <span th:text="${#temporals.format(volDetail.dateDepart, 'dd/MM/yyyy HH:mm')}">10/01/2026 08:00</span></p>
-                        <p><strong>Date Arrivée:</strong> <span th:text="${#temporals.format(volDetail.dateArrivee, 'dd/MM/yyyy HH:mm')}">10/01/2026 10:30</span></p>
-                        <p><strong>Avion:</strong> <span th:text="${volDetail.avion.modele + ' (Capacité: ' + volDetail.avion.capacite + ')'}">Airbus A320</span></p>
+                        <p><strong>Date Départ:</strong> <span th:text="${#temporals.format(volDetail.dateHeureDepart, 'dd/MM/yyyy HH:mm')}">10/01/2026 08:00</span></p>
+                        <p><strong>Date Arrivée:</strong> <span th:text="${#temporals.format(volDetail.dateHeureArrivee, 'dd/MM/yyyy HH:mm')}">10/01/2026 10:30</span></p>
+                        <p><strong>Avion:</strong> <span th:text="${volDetail.avion.modele + ' (Éco: ' + volDetail.avion.capaciteEconomique + ' / 1ère: ' + volDetail.avion.capacitePremiere + ' / Premium: ' + volDetail.avion.capacitePremium + ')'}">Airbus A320</span></p>
                     </div>
                 </div>
             </div>

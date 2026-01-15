@@ -56,7 +56,7 @@
                         <td th:text="${avion.idAvion}"></td>
                         <td th:text="${avion.compagnie.nom}"></td>
                         <td th:text="${avion.modele}"></td>
-                        <td th:text="${avion.capacite}"></td>
+                        <td th:text="${'Éco: ' + avion.capaciteEconomique + ' / 1ère: ' + avion.capacitePremiere + ' (Total: ' + avion.capaciteTotale + ')'}"></td>
                         <td th:text="${avion.statut}"></td>
                         <td>
                             <a th:href="@{/avions/edit/{id}(id=${avion.idAvion})}" class="btn-edit">Modifier</a>

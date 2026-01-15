@@ -30,8 +30,19 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Prix (EUR)</label>
-                        <input type="number" step="0.01" th:field="*{prixBase}" required />
+                        <label>Prix Économique (Ariary - MGA)</label>
+                        <input type="number" step="1" min="0" th:field="*{prixEconomique}" placeholder="Ex: 100000" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Prix Première (Ariary - MGA)</label>
+                        <input type="number" step="1" min="0" th:field="*{prixPremiere}" placeholder="Ex: 150000" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Prix Premium (Ariary - MGA)</label>
+                        <input type="number" step="1" min="0" th:field="*{prixPremium}" placeholder="Ex: 125000" />
+                        <span class="form-help">Laissez vide pour utiliser un tarif par défaut</span>
                     </div>
 
                     <div class="form-group">
