@@ -17,31 +17,19 @@ public class Vol {
     @Column(name = "id_vol")
     private Long idVol;
 
-    @Column(name = "numero_vol", nullable = false)
+    @Column(name = "numero_vol")
     private String numeroVol;
 
-    @Column(name = "prix_base", nullable = false)
-    private double prixBase;
-
-    @Column(name = "prix_economique")
-    private Double prixEconomique;
-
-    @Column(name = "prix_premiere")
-    private Double prixPremiere;
-
-    @Column(name = "prix_premium")
-    private Double prixPremium;
-
     @ManyToOne
-    @JoinColumn(name = "id_compagnie", nullable = false)
+    @JoinColumn(name = "id_compagnie")
     private Compagnie compagnie;
 
     @ManyToOne
-    @JoinColumn(name = "id_aeroport_depart", nullable = false)
+    @JoinColumn(name = "id_aeroport_depart")
     private Aeroport aeroportDepart;
 
     @ManyToOne
-    @JoinColumn(name = "id_aeroport_arrivee", nullable = false)
+    @JoinColumn(name = "id_aeroport_arrivee")
     private Aeroport aeroportArrivee;
 
     @OneToMany(mappedBy = "vol", cascade = CascadeType.ALL)

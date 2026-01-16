@@ -46,7 +46,7 @@
                         <th>Numéro</th>
                         <th>Départ</th>
                         <th>Arrivée</th>
-                        <th>Prix</th>
+                        <th>Nb Détails</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -58,9 +58,7 @@
                         <td th:text="${vol.aeroportDepart.nom}"></td>
                         <td th:text="${vol.aeroportArrivee.nom}"></td>
                         <td>
-                            <div><strong>Éco:</strong> <span th:text="${vol.prixEconomique != null ? #numbers.formatDecimal(vol.prixEconomique,0,0) + ' MGA' : #numbers.formatDecimal(vol.prixBase,0,0) + ' MGA'}"></span></div>
-                            <div><strong>Première:</strong> <span th:text="${vol.prixPremiere != null ? #numbers.formatDecimal(vol.prixPremiere,0,0) + ' MGA' : #numbers.formatDecimal(vol.prixBase * 1.5,0,0) + ' MGA'}"></span></div>
-                            <div><strong>Premium:</strong> <span th:text="${vol.prixPremium != null ? #numbers.formatDecimal(vol.prixPremium,0,0) + ' MGA' : #numbers.formatDecimal(vol.prixBase * 1.25,0,0) + ' MGA'}"></span></div>
+                            <span class="badge" th:text="${vol.volDetails != null ? vol.volDetails.size() : 0} + ' programmé(s)'"></span>
                         </td>
                         <td>
                             <a th:href="@{/vol/{id}/details(id=${vol.idVol})}" class="btn btn-edit">Détails</a>

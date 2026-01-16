@@ -23,32 +23,17 @@
             <article class="card">
 
                 <form th:action="@{${vol.idVol == null} ? '/vol/add' : '/vol/edit'}" th:object="${vol}" method="post">
+                    <input type="hidden" th:field="*{idVol}" />
 
                     <div class="form-group">
-                        <label>Numéro</label>
+                        <label>Numero</label>
                         <input type="text" th:field="*{numeroVol}" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Prix Économique (Ariary - MGA)</label>
-                        <input type="number" step="1" min="0" th:field="*{prixEconomique}" placeholder="Ex: 100000" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Prix Première (Ariary - MGA)</label>
-                        <input type="number" step="1" min="0" th:field="*{prixPremiere}" placeholder="Ex: 150000" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Prix Premium (Ariary - MGA)</label>
-                        <input type="number" step="1" min="0" th:field="*{prixPremium}" placeholder="Ex: 125000" />
-                        <span class="form-help">Laissez vide pour utiliser un tarif par défaut</span>
                     </div>
 
                     <div class="form-group">
                         <label>Compagnie</label>
                         <select th:field="*{compagnie.idCompagnie}" required>
-                            <option value="">Sélectionner une compagnie</option>
+                            <option value="">Selectionner une compagnie</option>
                             <option th:each="c : ${compagnies}"
                                     th:value="${c.idCompagnie}"
                                     th:text="${c.nom}">
@@ -57,9 +42,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Aéroport Départ</label>
+                        <label>Aeroport Depart</label>
                         <select th:field="*{aeroportDepart.idAeroport}" required>
-                            <option value="">Sélectionner un aéroport</option>
+                            <option value="">Selectionner un aeroport</option>
                             <option th:each="a : ${aeroports}"
                                     th:value="${a.idAeroport}"
                                     th:text="${a.nom} + ' (' + ${a.ville} + ')'">
@@ -68,15 +53,19 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Aéroport Arrivée</label>
+                        <label>Aeroport Arrivee</label>
                         <select th:field="*{aeroportArrivee.idAeroport}" required>
-                            <option value="">Sélectionner un aéroport</option>
+                            <option value="">Selectionner un aeroport</option>
                             <option th:each="a : ${aeroports}"
                                     th:value="${a.idAeroport}"
                                     th:text="${a.nom} + ' (' + ${a.ville} + ')'">
                             </option>
                         </select>
                     </div>
+
+                    <p class="module-description" style="margin-top:16px;color:#666;">
+                        Les prix et places par classe sont definis dans les executions de vol (vol_detail).
+                    </p>
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-save">Enregistrer</button>

@@ -3,8 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiffre d'affaires | Compagnie aérienne</title>
+    <title>Chiffre d'affaires | Compagnie aerienne</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        .stat-card.success .value { color: #4caf50; }
+        .stat-card.info .value { color: #2196f3; }
+        .stat-card.warning .value { color: #ff9800; }
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            padding: 16px 24px;
+        }
+        .filter-form .form-group {
+            margin: 0;
+        }
+        .filter-form label {
+            display: block;
+            font-size: 0.85em;
+            margin-bottom: 4px;
+            color: #555;
+        }
+        .filter-form select, .filter-form input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            padding-bottom: 2px;
+        }
+    </style>
 </head>
 <body>
 <div class="app-shell">
@@ -13,89 +68,123 @@
         <div class="main-header">
             <div>
                 <p class="eyebrow">Rapports</p>
-                <h1>Chiffre d'affaires</h1>
-                <p class="module-description">Filtrez par vol, date ou client pour afficher le chiffre d'affaires.</p>
+                <h1>Chiffre d'Affaires</h1>
+                <p class="module-description">Analysez les revenus par vol, avion, compagnie ou client.</p>
             </div>
         </div>
 
+        <!-- Statistiques -->
+        <section class="content-section">
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <h4>Total CA</h4>
+                    <div class="value" th:text="${#numbers.formatDecimal(total,0,0)} + ' MGA'">0 MGA</div>
+                </div>
+                <div class="stat-card info">
+                    <h4>Nb Paiements</h4>
+                    <div class="value" th:text="${nbPaiements}">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <h4>Moyenne / Paiement</h4>
+                    <div class="value" th:text="${#numbers.formatDecimal(moyenne,0,0)} + ' MGA'">0 MGA</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filtres -->
         <div class="table-wrapper">
             <header>
                 <div>
                     <h3 class="section-title">Filtres</h3>
-                    <p class="module-description">Sélectionnez des filtres puis cliquez sur Appliquer.</p>
+                    <p class="module-description">Selectionnez des criteres puis cliquez sur Appliquer.</p>
                 </div>
             </header>
 
-            <form th:action="@{/chiffre-affaire}" method="get" class="form" style="padding:16px 24px;">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Vol</label>
-                        <select name="volId">
-                            <option value="" th:selected="${selectedVol == null}">Tous</option>
-                            <option th:each="v : ${vols}" th:value="${v.idVol}" th:text="${v.numeroVol}" th:selected="${v.idVol == selectedVol}"></option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Client</label>
-                        <select name="userId">
-                            <option value="" th:selected="${selectedUser == null}">Tous</option>
-                            <option th:each="u : ${utilisateurs}" th:value="${u.idUtilisateur}" th:text="${u.nom + ' ' + u.prenom}" th:selected="${u.idUtilisateur == selectedUser}"></option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Date début</label>
-                        <input type="date" name="startDate" th:value="${startDate}" />
-                    </div>
-                    <div class="form-group">
-                        <label>Date fin</label>
-                        <input type="date" name="endDate" th:value="${endDate}" />
-                    </div>
+            <form th:action="@{/chiffre-affaire}" method="get" class="filter-form">
+                <div class="form-group">
+                    <label>Compagnie</label>
+                    <select name="compagnieId">
+                        <option value="" th:selected="${selectedCompagnie == null}">Toutes</option>
+                        <option th:each="c : ${compagnies}" th:value="${c.idCompagnie}" th:text="${c.nom}" th:selected="${c.idCompagnie == selectedCompagnie}"></option>
+                    </select>
                 </div>
-
-                <div class="form-actions">
+                <div class="form-group">
+                    <label>Avion</label>
+                    <select name="avionId">
+                        <option value="" th:selected="${selectedAvion == null}">Tous</option>
+                        <option th:each="a : ${avions}" th:value="${a.idAvion}" th:text="${a.modele}" th:selected="${a.idAvion == selectedAvion}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Vol</label>
+                    <select name="volId">
+                        <option value="" th:selected="${selectedVol == null}">Tous</option>
+                        <option th:each="v : ${vols}" th:value="${v.idVol}" th:text="${v.numeroVol}" th:selected="${v.idVol == selectedVol}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Client</label>
+                    <select name="userId">
+                        <option value="" th:selected="${selectedUser == null}">Tous</option>
+                        <option th:each="u : ${utilisateurs}" th:value="${u.idUtilisateur}" th:text="${u.nom + ' ' + u.prenom}" th:selected="${u.idUtilisateur == selectedUser}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date debut</label>
+                    <input type="date" name="startDate" th:value="${startDate}" />
+                </div>
+                <div class="form-group">
+                    <label>Date fin</label>
+                    <input type="date" name="endDate" th:value="${endDate}" />
+                </div>
+                <div class="filter-actions">
                     <button type="submit" class="btn btn-apply">Appliquer</button>
-                    <a href="/chiffre-affaire" class="btn btn-secondary">Réinitialiser</a>
+                    <a href="/chiffre-affaire" class="btn btn-secondary">Reset</a>
                 </div>
             </form>
+        </div>
 
-            <div style="padding: 16px 24px;">
-                <h3 class="section-title">Résultats</h3>
-                <p class="module-description">Total: <strong th:text="${#numbers.formatDecimal(total,1,2)} + ' Ariary'"></strong></p>
+        <!-- Tableau des paiements -->
+        <div class="table-wrapper" style="margin-top: 20px;">
+            <header>
+                <h3 class="section-title">Details des paiements</h3>
+            </header>
 
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                        <tr>
-                            <th>Date paiement</th>
-                            <th>Réservation</th>
-                            <th>Vol</th>
-                            <th>Client</th>
-                            <th>Montant</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="p : ${paiements}">
-                            <td th:text="${#temporals.format(p.datePaiement, 'yyyy-MM-dd HH:mm')}"></td>
-                            <td th:text="${p.reservation != null ? p.reservation.numeroReservation : '-'}"></td>
-                            <td th:text="${p.reservation != null && p.reservation.volDetail != null && p.reservation.volDetail.vol != null ? p.reservation.volDetail.vol.numeroVol : '-'}"></td>
-                            <td th:text="${p.reservation != null && p.reservation.utilisateur != null ? p.reservation.utilisateur.nom + ' ' + p.reservation.utilisateur.prenom : '-'}"></td>
-                            <td th:text="${#numbers.formatDecimal(p.montant,1,2)} + ' Ariary'"></td>
-                            <td>
-                                <a th:if="${p.reservation != null}" th:href="@{/reservations/{id}(id=${p.reservation.idReservation})}" class="btn btn-apply">Voir Réservation</a>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(paiements)}">
-                            <td colspan="6">Aucun paiement trouvé pour ces critères.</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reservation</th>
+                        <th>Vol</th>
+                        <th>Avion</th>
+                        <th>Compagnie</th>
+                        <th>Client</th>
+                        <th>Classe</th>
+                        <th>Montant</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${paiements}">
+                        <td th:text="${p.datePaiement != null ? #temporals.format(p.datePaiement, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                        <td th:text="${p.reservation != null ? p.reservation.numeroReservation : '-'}"></td>
+                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.vol != null ? p.reservation.volDetail.vol.numeroVol : '-'}"></td>
+                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.avion != null ? p.reservation.volDetail.avion.modele : '-'}"></td>
+                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.vol != null and p.reservation.volDetail.vol.compagnie != null ? p.reservation.volDetail.vol.compagnie.nom : '-'}"></td>
+                        <td th:text="${p.reservation != null and p.reservation.utilisateur != null ? p.reservation.utilisateur.nom + ' ' + p.reservation.utilisateur.prenom : '-'}"></td>
+                        <td th:text="${p.reservation != null and p.reservation.classeSiege != null ? p.reservation.classeSiege.libelle : '-'}"></td>
+                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatDecimal(p.montant,0,0)} + ' MGA'"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(paiements)}">
+                        <td colspan="8" style="text-align:center;padding:20px;color:#999;">Aucun paiement trouve pour ces criteres.</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <footer class="main-footer">
-            <span>© 2026 Compagnie aérienne</span>
+            <span>2026 Compagnie aerienne</span>
         </footer>
 
     </main>

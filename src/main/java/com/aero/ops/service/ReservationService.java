@@ -1,24 +1,27 @@
 package com.aero.ops.service;
 
-import com.aero.ops.model.Reservation;
-import com.aero.ops.model.VolDetail;
+import com.aero.ops.model.*;
 import com.aero.ops.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final VolDetailService volDetailService;
+    private final VolClasseService volClasseService;
+    private final PrixClasseAgeService prixClasseAgeService;
 
-    public ReservationService(ReservationRepository reservationRepository, VolDetailService volDetailService) {
+    public ReservationService(ReservationRepository reservationRepository,
+                              VolClasseService volClasseService,
+                              PrixClasseAgeService prixClasseAgeService) {
         this.reservationRepository = reservationRepository;
-        this.volDetailService = volDetailService;
+        this.volClasseService = volClasseService;
+        this.prixClasseAgeService = prixClasseAgeService;
     }
 
     public List<Reservation> getAll() {
@@ -37,59 +40,153 @@ public class ReservationService {
         return reservationRepository.findById(id).orElse(null);
     }
 
+    /**
+     * Crée une nouvelle réservation avec vérification et décrémentation des places.
+     * 
+     * Règles métier:
+     * 1. Vérifier que places_restantes > 0 pour la classe choisie
+     * 2. Décrémenter les places après validation
+     * 3. Le prix est récupéré depuis prix_classe_age
+     */
     @Transactional
     public Reservation create(Reservation reservation) {
+        validateReservation(reservation);
+        
         reservation.setDateReservation(LocalDateTime.now());
         if (reservation.getStatut() == null) {
             reservation.setStatut("EN_ATTENTE");
         }
 
-        // Adjust remaining seats based on chosen class
-        VolDetail detail = reservation.getVolDetail();
-        if (detail != null && reservation.getClasse() != null) {
-            if ("ECONOMIQUE".equalsIgnoreCase(reservation.getClasse())) {
-                if (detail.getPlacesEcoRestantes() == null || detail.getPlacesEcoRestantes() <= 0) {
-                    throw new IllegalStateException("Aucune place économique disponible pour ce vol.");
-                }
-                detail.setPlacesEcoRestantes(detail.getPlacesEcoRestantes() - 1);
-            } else if ("PREMIERE".equalsIgnoreCase(reservation.getClasse())) {
-                if (detail.getPlacesPremiereRestantes() == null || detail.getPlacesPremiereRestantes() <= 0) {
-                    throw new IllegalStateException("Aucune place première disponible pour ce vol.");
-                }
-                detail.setPlacesPremiereRestantes(detail.getPlacesPremiereRestantes() - 1);
-            } else if ("PREMIUM".equalsIgnoreCase(reservation.getClasse())) {
-                if (detail.getPlacesPremiumRestantes() == null || detail.getPlacesPremiumRestantes() <= 0) {
-                    throw new IllegalStateException("Aucune place premium disponible pour ce vol.");
-                }
-                detail.setPlacesPremiumRestantes(detail.getPlacesPremiumRestantes() - 1);
-            }
-            volDetailService.update(detail);
+        Long idVolDetail = reservation.getVolDetail().getIdVolDetail();
+        Long idClasse = reservation.getClasseSiege().getIdClasse();
+
+        // Vérifier et décrémenter les places
+        boolean decremented = volClasseService.decrementPlaces(idVolDetail, idClasse);
+        if (!decremented) {
+            throw new IllegalStateException("Aucune place disponible pour la classe " 
+                    + reservation.getClasseSiege().getLibelle() + " sur ce vol.");
         }
 
         return reservationRepository.save(reservation);
     }
 
+    /**
+     * Met à jour une réservation.
+     * Si la réservation est annulée, restaure les places.
+     */
     @Transactional
     public Reservation update(Reservation reservation) {
-        // If reservation is being cancelled, restore seat
         Reservation existing = reservationRepository.findById(reservation.getIdReservation()).orElse(null);
-        if (existing != null && !"ANNULÉ".equals(existing.getStatut()) && "ANNULÉ".equals(reservation.getStatut())) {
-            VolDetail detail = reservation.getVolDetail();
-            if (detail != null && reservation.getClasse() != null) {
-                if ("ECONOMIQUE".equalsIgnoreCase(reservation.getClasse())) {
-                    detail.setPlacesEcoRestantes((detail.getPlacesEcoRestantes() == null ? 0 : detail.getPlacesEcoRestantes()) + 1);
-                } else if ("PREMIERE".equalsIgnoreCase(reservation.getClasse())) {
-                    detail.setPlacesPremiereRestantes((detail.getPlacesPremiereRestantes() == null ? 0 : detail.getPlacesPremiereRestantes()) + 1);
-                } else if ("PREMIUM".equalsIgnoreCase(reservation.getClasse())) {
-                    detail.setPlacesPremiumRestantes((detail.getPlacesPremiumRestantes() == null ? 0 : detail.getPlacesPremiumRestantes()) + 1);
-                }
-                volDetailService.update(detail);
+        
+        // Si la réservation passe à ANNULÉ, restaurer les places
+        if (existing != null 
+                && !"ANNULÉ".equals(existing.getStatut()) 
+                && "ANNULÉ".equals(reservation.getStatut())) {
+            
+            if (reservation.getVolDetail() != null && reservation.getClasseSiege() != null) {
+                volClasseService.incrementPlaces(
+                        reservation.getVolDetail().getIdVolDetail(),
+                        reservation.getClasseSiege().getIdClasse()
+                );
             }
         }
+        
         return reservationRepository.save(reservation);
+    }
+
+    /**
+     * Annule une réservation et restaure les places.
+     */
+    @Transactional
+    public Reservation cancel(Long id) {
+        Reservation reservation = reservationRepository.findById(id).orElse(null);
+        if (reservation == null) {
+            throw new IllegalArgumentException("Réservation non trouvée.");
+        }
+        return cancel(reservation);
+    }
+    
+    /**
+     * Annule une réservation et restaure les places.
+     */
+    @Transactional
+    public Reservation cancel(Reservation reservation) {
+        if (reservation == null) {
+            throw new IllegalArgumentException("Réservation non trouvée.");
+        }
+        
+        if ("ANNULÉ".equals(reservation.getStatut())) {
+            return reservation; // Déjà annulée
+        }
+        
+        // Restaurer les places
+        if (reservation.getVolDetail() != null && reservation.getClasseSiege() != null) {
+            volClasseService.incrementPlaces(
+                    reservation.getVolDetail().getIdVolDetail(),
+                    reservation.getClasseSiege().getIdClasse()
+            );
+        }
+        
+        reservation.setStatut("ANNULÉ");
+        return reservationRepository.save(reservation);
+    }
+
+    /**
+     * Récupère le prix depuis prix_classe_age.
+     */
+    public BigDecimal getPrix(Reservation reservation) {
+        if (reservation.getVolDetail() == null 
+                || reservation.getClasseSiege() == null 
+                || reservation.getCategorieAge() == null) {
+            return BigDecimal.ZERO;
+        }
+        
+        return prixClasseAgeService.getMontant(
+                reservation.getVolDetail().getIdVolDetail(),
+                reservation.getClasseSiege().getIdClasse(),
+                reservation.getCategorieAge().getIdCategorie()
+        );
+    }
+
+    /**
+     * Vérifie la disponibilité des places pour une classe donnée.
+     */
+    public boolean hasPlacesDisponibles(Long idVolDetail, Long idClasse) {
+        return volClasseService.hasPlacesDisponibles(idVolDetail, idClasse);
+    }
+
+    /**
+     * Retourne le nombre de places restantes pour une classe donnée.
+     */
+    public int getPlacesRestantes(Long idVolDetail, Long idClasse) {
+        return volClasseService.getPlacesRestantes(idVolDetail, idClasse);
     }
 
     public void delete(Long id) {
         reservationRepository.deleteById(id);
+    }
+
+    private void validateReservation(Reservation reservation) {
+        if (reservation.getVolDetail() == null) {
+            throw new IllegalArgumentException("Le vol est obligatoire.");
+        }
+        if (reservation.getClasseSiege() == null) {
+            throw new IllegalArgumentException("La classe de siège est obligatoire.");
+        }
+        if (reservation.getCategorieAge() == null) {
+            throw new IllegalArgumentException("La catégorie d'âge est obligatoire.");
+        }
+        if (reservation.getUtilisateur() == null) {
+            throw new IllegalArgumentException("L'utilisateur est obligatoire.");
+        }
+        
+        // Vérifier les places disponibles
+        Long idVolDetail = reservation.getVolDetail().getIdVolDetail();
+        Long idClasse = reservation.getClasseSiege().getIdClasse();
+        
+        if (!volClasseService.hasPlacesDisponibles(idVolDetail, idClasse)) {
+            throw new IllegalStateException("Aucune place disponible pour la classe " 
+                    + reservation.getClasseSiege().getLibelle() + " sur ce vol.");
+        }
     }
 }

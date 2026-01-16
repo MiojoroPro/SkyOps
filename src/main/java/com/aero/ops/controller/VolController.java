@@ -1,15 +1,17 @@
 package com.aero.ops.controller;
 
-import com.aero.ops.model.Vol;
-import com.aero.ops.model.VolDetail;
-import com.aero.ops.service.AvionService;
-import com.aero.ops.service.AeroportService;
-import com.aero.ops.service.CompagnieService;
-import com.aero.ops.service.VolDetailService;
-import com.aero.ops.service.VolService;
+import com.aero.ops.model.*;
+import com.aero.ops.service.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 
 @Controller
 @RequestMapping("/vol")
@@ -20,17 +22,29 @@ public class VolController {
     private final CompagnieService compagnieService;
     private final AeroportService aeroportService;
     private final AvionService avionService;
+    private final ClasseSiegeService classeSiegeService;
+    private final CategorieAgeService categorieAgeService;
+    private final VolClasseService volClasseService;
+    private final PrixClasseAgeService prixClasseAgeService;
 
     public VolController(VolService volService,
                          VolDetailService volDetailService,
                          CompagnieService compagnieService,
                          AeroportService aeroportService,
-                         AvionService avionService) {
+                         AvionService avionService,
+                         ClasseSiegeService classeSiegeService,
+                         CategorieAgeService categorieAgeService,
+                         VolClasseService volClasseService,
+                         PrixClasseAgeService prixClasseAgeService) {
         this.volService = volService;
         this.volDetailService = volDetailService;
         this.compagnieService = compagnieService;
         this.aeroportService = aeroportService;
         this.avionService = avionService;
+        this.classeSiegeService = classeSiegeService;
+        this.categorieAgeService = categorieAgeService;
+        this.volClasseService = volClasseService;
+        this.prixClasseAgeService = prixClasseAgeService;
     }
 
     // Liste des vols
@@ -96,7 +110,7 @@ public class VolController {
         return "redirect:/vol";
     }
 
-    // Détails et exécutions d’un vol
+    // Détails et exécutions d'un vol
     @GetMapping("/{id}/details")
     public String volDetails(@PathVariable Long id, Model model) {
         Vol vol = volService.getById(id);
@@ -104,15 +118,100 @@ public class VolController {
         model.addAttribute("details", volDetailService.getByVol(vol));
         model.addAttribute("newDetail", new VolDetail());
         model.addAttribute("avions", avionService.getAll());
+        model.addAttribute("classes", classeSiegeService.getAll());
+        model.addAttribute("categories", categorieAgeService.getAll());
         return "views/vol/details";
+    }
+
+    // Formulaire d'ajout de VolDetail (planification de vol)
+    @GetMapping("/{id}/details/add")
+    public String addVolDetailForm(@PathVariable Long id, Model model) {
+        Vol vol = volService.getById(id);
+        model.addAttribute("vol", vol);
+        model.addAttribute("newDetail", new VolDetail());
+        model.addAttribute("avions", avionService.getAll());
+        model.addAttribute("classes", classeSiegeService.getAll());
+        model.addAttribute("categories", categorieAgeService.getAll());
+        return "views/vol/add-detail";
+    }
+
+    // Ajouter un VolDetail avec places par classe et prix par classe/âge
+    @PostMapping("/{id}/details/add")
+    @Transactional
+    public String addVolDetail(@PathVariable Long id,
+                               @ModelAttribute VolDetail volDetail,
+                               @RequestParam Map<String, String> allParams) {
+        Vol vol = volService.getById(id);
+        volDetail.setVol(vol);
+        
+        // Résoudre l'avion
+        if (volDetail.getAvion() != null && volDetail.getAvion().getIdAvion() != null) {
+            volDetail.setAvion(avionService.getById(volDetail.getAvion().getIdAvion()));
+        }
+        
+        // Sauvegarder le VolDetail
+        VolDetail saved = volDetailService.create(volDetail);
+        
+        // Créer les entrées VolClasse (places par classe)
+        for (ClasseSiege classe : classeSiegeService.getAll()) {
+            String placesKey = "places_" + classe.getIdClasse();
+            String placesStr = allParams.get(placesKey);
+            if (placesStr != null && !placesStr.isBlank()) {
+                try {
+                    int places = Integer.parseInt(placesStr);
+                    if (places >= 0) {
+                        VolClasse vc = new VolClasse();
+                        vc.setVolDetail(saved);
+                        vc.setClasseSiege(classe);
+                        vc.setPlacesRestantes(places);
+                        volClasseService.save(vc);
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        
+        // Créer les entrées PrixClasseAge (prix par classe et catégorie d'âge)
+        for (ClasseSiege classe : classeSiegeService.getAll()) {
+            for (CategorieAge categorie : categorieAgeService.getAll()) {
+                String prixKey = "prix_" + classe.getIdClasse() + "_" + categorie.getIdCategorie();
+                String prixStr = allParams.get(prixKey);
+                if (prixStr != null && !prixStr.isBlank()) {
+                    try {
+                        BigDecimal prix = new BigDecimal(prixStr);
+                        if (prix.compareTo(BigDecimal.ZERO) >= 0) {
+                            PrixClasseAge pca = new PrixClasseAge();
+                            pca.setVolDetail(saved);
+                            pca.setClasseSiege(classe);
+                            pca.setCategorieAge(categorie);
+                            pca.setPrix(prix);
+                            prixClasseAgeService.save(pca);
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+        
+        return "redirect:/vol/" + id + "/details";
+    }
+
+    // Supprimer un VolDetail
+    @GetMapping("/details/delete/{id}")
+    @Transactional
+    public String deleteVolDetail(@PathVariable Long id) {
+        VolDetail detail = volDetailService.getById(id);
+        Long volId = detail.getVol().getIdVol();
+        volDetailService.delete(id);
+        return "redirect:/vol/" + volId + "/details";
     }
 
     // Recette maximale possible pour un vol (somme des exécutions)
     @GetMapping("/{id}/max-revenue")
     public String maxRevenue(@PathVariable Long id, Model model) {
         Vol vol = volService.getById(id);
-        java.util.List<VolDetail> details = volDetailService.getByVol(vol);
-        double total = details.stream().mapToDouble(d -> d.getMaxRevenue() != null ? d.getMaxRevenue() : 0.0).sum();
+        List<VolDetail> details = volDetailService.getByVol(vol);
+        BigDecimal total = details.stream()
+                .map(d -> d.getMaxRevenue() != null ? d.getMaxRevenue() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         model.addAttribute("vol", vol);
         model.addAttribute("details", details);
         model.addAttribute("totalMaxRevenue", total);
@@ -125,33 +224,33 @@ public class VolController {
                                  @RequestParam(name = "endDate", required = false) String endDateStr,
                                  @RequestParam(name = "avionId", required = false) Long avionId,
                                  Model model) {
-        java.time.LocalDateTime parsedStart = null;
-        java.time.LocalDateTime parsedEnd = null;
+        LocalDateTime parsedStart = null;
+        LocalDateTime parsedEnd = null;
         try {
             if (startDateStr != null && !startDateStr.isBlank()) {
-                java.time.LocalDate sd = java.time.LocalDate.parse(startDateStr);
+                LocalDate sd = LocalDate.parse(startDateStr);
                 parsedStart = sd.atStartOfDay();
             }
             if (endDateStr != null && !endDateStr.isBlank()) {
-                java.time.LocalDate ed = java.time.LocalDate.parse(endDateStr);
+                LocalDate ed = LocalDate.parse(endDateStr);
                 parsedEnd = ed.atTime(23,59,59,999000000);
             }
-        } catch (java.time.format.DateTimeParseException ex) {
+        } catch (DateTimeParseException ex) {
             // ignore invalid parse, leave filters null
         }
 
-        final java.time.LocalDateTime start = parsedStart;
-        final java.time.LocalDateTime end = parsedEnd;
-        java.util.List<Vol> vols = volService.getAll();
-        java.util.Map<Long, Double> totals = new java.util.HashMap<>();
+        final LocalDateTime start = parsedStart;
+        final LocalDateTime end = parsedEnd;
+        List<Vol> vols = volService.getAll();
+        Map<Long, BigDecimal> totals = new HashMap<>();
         for (Vol v : vols) {
-            java.util.List<VolDetail> details = volDetailService.getByVol(v);
-            double sum = details.stream()
+            List<VolDetail> details = volDetailService.getByVol(v);
+            BigDecimal sum = details.stream()
                     .filter(d -> (start == null || (d.getDateHeureDepart() != null && !d.getDateHeureDepart().isBefore(start)))
                             && (end == null || (d.getDateHeureDepart() != null && !d.getDateHeureDepart().isAfter(end)))
                             && (avionId == null || (d.getAvion() != null && d.getAvion().getIdAvion().equals(avionId))))
-                    .mapToDouble(d -> d.getMaxRevenue() != null ? d.getMaxRevenue() : 0.0)
-                    .sum();
+                    .map(d -> d.getMaxRevenue() != null ? d.getMaxRevenue() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             totals.put(v.getIdVol(), sum);
         }
         model.addAttribute("vols", vols);
@@ -161,26 +260,5 @@ public class VolController {
         model.addAttribute("avionId", avionId);
         model.addAttribute("avions", avionService.getAll());
         return "views/vol/max-revenue-list";
-    }
-
-    // Ajouter un VolDetail
-    @PostMapping("/{id}/details/add")
-    public String addVolDetail(@PathVariable Long id, @ModelAttribute VolDetail volDetail) {
-        Vol vol = volService.getById(id);
-        volDetail.setVol(vol);
-        if (volDetail.getAvion() != null && volDetail.getAvion().getIdAvion() != null) {
-            volDetail.setAvion(avionService.getById(volDetail.getAvion().getIdAvion()));
-        }
-        volDetailService.create(volDetail);
-        return "redirect:/vol/" + id + "/details";
-    }
-
-    // Supprimer un VolDetail
-    @GetMapping("/details/delete/{id}")
-    public String deleteVolDetail(@PathVariable Long id) {
-        VolDetail detail = volDetailService.getById(id);
-        Long volId = detail.getVol().getIdVol();
-        volDetailService.delete(id);
-        return "redirect:/vol/" + volId + "/details";
     }
 }

@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Modifier Avion | Compagnie aérienne</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+    <style>
+        .capacity-section { margin-top: 20px; }
+        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .capacity-item { padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .capacity-item label { font-weight: bold; display: block; margin-bottom: 5px; }
+    </style>
 </head>
 
 <body>
@@ -45,25 +51,7 @@
                     <input type="text" th:field="*{modele}" required />
                 </div>
 
-                <!-- Capacité économique -->
-                <div class="form-group">
-                    <label>Capacité Économique</label>
-                    <input type="number" th:field="*{capaciteEconomique}" min="0" required />
-                </div>
-
-                <!-- Capacité première -->
-                <div class="form-group">
-                    <label>Capacité Première</label>
-                    <input type="number" th:field="*{capacitePremiere}" min="0" required />
-                </div>
-
-                <!-- Capacité premium -->
-                <div class="form-group">
-                    <label>Capacité Premium</label>
-                    <input type="number" th:field="*{capacitePremium}" min="0" required />
-                </div>
-
-                <!-- Statut (si présent dans l'entité Avion) -->
+                <!-- Statut -->
                 <div class="form-group">
                     <label>Statut</label>
                     <select th:field="*{statut}" required>
@@ -73,9 +61,29 @@
                     </select>
                 </div>
 
-                <div class="form-actions">
+                <!-- Capacités par classe de siège -->
+                <div class="capacity-section">
+                    <h3>Capacité par classe de siège</h3>
+                    <p style="color: #666; margin-bottom: 15px;">Définissez le nombre de sièges pour chaque classe</p>
+                    
+                    <div class="capacity-grid">
+                        <div th:each="classe : ${classes}" class="capacity-item">
+                            <label th:text="${classe.libelle}">Classe</label>
+                            <input type="number" 
+                                   th:name="'capacite_' + ${classe.idClasse}" 
+                                   th:value="${avionCapacites != null ? (avionCapacites[classe.idClasse] != null ? avionCapacites[classe.idClasse] : 0) : 0}" 
+                                   min="0" 
+                                   placeholder="Nombre de sièges" />
+                        </div>
+                        <div th:if="${classes == null or classes.isEmpty()}" style="color: #999;">
+                            Aucune classe de siège configurée
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 20px;">
                     <button type="submit" class="btn btn-save">
-                        Modifier l’avion
+                        Modifier l'avion
                     </button>
                     <a href="/avions" class="btn btn-secondary">
                         Annuler
@@ -86,7 +94,6 @@
 
         <footer class="main-footer">
             <span>© 2026 Compagnie aérienne</span>
-            <span>Interface conçue pour ETU003660</span>
         </footer>
     </main>
 </div>

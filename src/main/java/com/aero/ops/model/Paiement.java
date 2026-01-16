@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,10 +21,13 @@ public class Paiement {
     @Column(name = "date_paiement")
     private LocalDateTime datePaiement;
 
-    private double montant;
+    @Column(name = "montant")
+    private BigDecimal montant;
+
+    @Column(name = "statut")
     private String statut;
 
     @OneToOne
-    @JoinColumn(name = "id_reservation")
+    @JoinColumn(name = "id_reservation", unique = true)
     private Reservation reservation;
 }

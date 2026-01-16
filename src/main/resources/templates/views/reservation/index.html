@@ -77,13 +77,20 @@
                         <td th:text="${r.numeroReservation}"></td>
                         <td th:text="${r.utilisateur != null ? r.utilisateur.nom + ' ' + r.utilisateur.prenom : ''}"></td>
                         <td th:text="${r.volDetail != null ? r.volDetail.vol.numeroVol : ''}"></td>
-                        <td th:text="${r.classe}"></td>
+                        <td th:text="${r.classeSiege != null ? r.classeSiege.libelle : '—'}"></td>
                         <td th:text="${r.volDetail != null ? #temporals.format(r.volDetail.dateHeureDepart,'yyyy-MM-dd HH:mm') : ''}"></td>
                         <td th:text="${#temporals.format(r.dateReservation,'yyyy-MM-dd HH:mm')}" ></td>
-                        <td th:text="${r.statut}"></td>
                         <td>
-                            <span th:if="${r.paiement != null}" th:text="${r.paiement.statut} + ' (' + ${r.paiement.montant} + ' EUR)'"></span>
-                            <span th:if="${r.paiement == null}">Aucun</span>
+                            <span th:switch="${r.statut}">
+                                <span th:case="'EN_ATTENTE'" class="badge" style="background:#ff9800;color:white">EN ATTENTE</span>
+                                <span th:case="'CONFIRMEE'" class="badge" style="background:#4caf50;color:white">CONFIRMÉE</span>
+                                <span th:case="'ANNULÉ'" class="badge" style="background:#f44336;color:white">ANNULÉE</span>
+                                <span th:case="*" th:text="${r.statut}"></span>
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${r.paiement != null}" th:text="${r.paiement.statut}"></span>
+                            <span th:if="${r.paiement == null}" style="color:#999;">Aucun</span>
                         </td>
                         <td>
                             <a th:href="@{/reservations/{id}(id=${r.idReservation})}" class="btn btn-apply">Voir</a>

@@ -1,20 +1,38 @@
 -- =========================
+-- CLASSE_SIEGE (classes dynamiques)
+-- =========================
+INSERT INTO classe_siege (code, libelle) VALUES
+('ECO', 'Economique'),
+('PRE', 'Premiere'),
+('PRM', 'Premium'),
+('BUS', 'Business');
+
+-- =========================
+-- CATEGORIE_AGE (categories de passagers)
+-- =========================
+INSERT INTO categorie_age (libelle, age_min, age_max) VALUES
+('Adulte', 18, 64),
+('Enfant', 2, 17),
+('Bebe', 0, 1),
+('Senior', 65, 120);
+
+-- =========================
 -- UTILISATEUR
 -- =========================
 INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, role) VALUES
 ('Admin', 'System', 'admin@aeromanager.com', 'admin', 'ADMIN'),
 ('Rakoto', 'Jean', 'jean.rakoto@gmail.com', 'client', 'CLIENT'),
-('Rabe', 'Sophie', 'sophie.rabe@gmail.com', 'client', 'CLIENT');
+('Rabe', 'Sophie', 'sophie.rabe@gmail.com', 'client', 'CLIENT'),
+('Kamel', 'Rinah', 'kamel.rinah@gmail.com', 'client', 'CLIENT'),
+('Andria', 'Patrick', 'patrick.andria@gmail.com', 'client', 'CLIENT');
 
-
-INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, role) VALUES
-('kamel', 'Rinah', 'kamel.rinah@gmail.com', 'client', 'CLIENT');
 -- =========================
 -- COMPAGNIE
 -- =========================
 INSERT INTO compagnie (nom, code_iata, code_icao, pays) VALUES
 ('Madagascar Airlines', 'MD', 'MDG', 'Madagascar'),
-('Air France', 'AF', 'AFR', 'France');
+('Air France', 'AF', 'AFR', 'France'),
+('Air Mauritius', 'MK', 'MAU', 'Maurice');
 
 -- =========================
 -- AEROPORT
@@ -22,104 +40,163 @@ INSERT INTO compagnie (nom, code_iata, code_icao, pays) VALUES
 INSERT INTO aeroport (nom, ville, pays, code_iata) VALUES
 ('Ivato International Airport', 'Antananarivo', 'Madagascar', 'TNR'),
 ('Charles de Gaulle', 'Paris', 'France', 'CDG'),
-('Sir Seewoosagur Ramgoolam', 'Port-Louis', 'Maurice', 'MRU');
+('Sir Seewoosagur Ramgoolam', 'Port-Louis', 'Maurice', 'MRU'),
+('Fascene Airport', 'Nosy Be', 'Madagascar', 'NOS');
 
 -- =========================
--- AVION
--- capacite_economique + capacite_premiere
+-- AVION (sans colonnes capacite)
 -- =========================
-INSERT INTO avion (
-    modele,
-    capacite_economique,
-    capacite_premiere,
-    statut,
-    id_compagnie
-) VALUES
-('Airbus A320', 150, 30, 'DISPONIBLE', 1),
-('Boeing 737', 130, 30, 'DISPONIBLE', 1),
-('Airbus A350', 260, 40, 'DISPONIBLE', 2);
+INSERT INTO avion (modele, statut, id_compagnie) VALUES
+('Airbus A320', 'DISPONIBLE', 1),
+('Boeing 737', 'DISPONIBLE', 1),
+('Airbus A350', 'DISPONIBLE', 2),
+('ATR 72', 'DISPONIBLE', 1),
+('Boeing 777', 'MAINTENANCE', 2);
 
 -- =========================
--- VOL (ligne aérienne)
+-- AVION_CLASSE (capacite par classe pour chaque avion)
 -- =========================
-INSERT INTO vol (
-    numero_vol,
-    id_compagnie,
-    id_aeroport_depart,
-    id_aeroport_arrivee
-) VALUES
-('MD001', 1, 1, 2), -- TNR -> CDG
-('MD002', 1, 1, 3), -- TNR -> MRU
-('AF101', 2, 2, 1); -- CDG -> TNR
+-- Airbus A320 (id=1)
+INSERT INTO avion_classe (id_avion, id_classe, capacite) VALUES
+(1, 1, 150),
+(1, 2, 30),
+(1, 3, 20);
 
--- =========================
--- VOL_DETAIL (VOL PLANIFIÉ)
--- prix + places par classe
--- =========================
-INSERT INTO vol_detail (
-    date_heure_depart,
-    date_heure_arrivee,
-    prix_economique,
-    prix_premiere,
-    places_eco_restantes,
-    places_premiere_restantes,
-    statut,
-    id_vol,
-    id_avion
-) VALUES
--- MD001
-('2026-01-10 08:00:00', '2026-01-10 20:00:00',
- 1200.00, 2200.00,
- 150, 30,
- 'PROGRAMME', 1, 1),
+-- Boeing 737 (id=2)
+INSERT INTO avion_classe (id_avion, id_classe, capacite) VALUES
+(2, 1, 130),
+(2, 2, 30),
+(2, 3, 10);
 
-('2026-01-10 18:00:00', '2026-01-11 06:00:00',
- 1250.00, 2300.00,
- 130, 30,
- 'PROGRAMME', 1, 2),
+-- Airbus A350 (id=3)
+INSERT INTO avion_classe (id_avion, id_classe, capacite) VALUES
+(3, 1, 260),
+(3, 2, 40),
+(3, 3, 30),
+(3, 4, 20);
 
-('2026-01-11 08:00:00', '2026-01-11 20:00:00',
- 1200.00, 2200.00,
- 150, 30,
- 'PROGRAMME', 1, 1),
+-- ATR 72 (id=4)
+INSERT INTO avion_classe (id_avion, id_classe, capacite) VALUES
+(4, 1, 68),
+(4, 2, 8);
 
--- MD002
-('2026-01-10 09:00:00', '2026-01-10 12:00:00',
- 600.00, 1200.00,
- 130, 30,
- 'PROGRAMME', 2, 2),
-
--- AF101
-('2026-01-12 22:00:00', '2026-01-13 10:00:00',
- 1300.00, 2500.00,
- 260, 40,
- 'PROGRAMME', 3, 3);
+-- Boeing 777 (id=5)
+INSERT INTO avion_classe (id_avion, id_classe, capacite) VALUES
+(5, 1, 300),
+(5, 2, 50),
+(5, 3, 40),
+(5, 4, 30);
 
 -- =========================
--- RESERVATION
--- classe obligatoire
+-- VOL (ligne aerienne)
 -- =========================
-INSERT INTO reservation (
-    date_reservation,
-    numero_reservation,
-    classe,
-    statut,
-    id_utilisateur,
-    id_vol_detail
-) VALUES
-(CURRENT_TIMESTAMP, 'RES-001', 'ECONOMIQUE', 'CONFIRMEE', 2, 1),
-(CURRENT_TIMESTAMP, 'RES-002', 'PREMIERE',   'EN_ATTENTE', 3, 2),
-(CURRENT_TIMESTAMP, 'RES-003', 'ECONOMIQUE', 'CONFIRMEE', 2, 4);
+INSERT INTO vol (numero_vol, id_compagnie, id_aeroport_depart, id_aeroport_arrivee) VALUES
+('MD001', 1, 1, 2),
+('MD002', 1, 1, 3),
+('MD003', 1, 1, 4),
+('AF101', 2, 2, 1),
+('MK501', 3, 3, 1);
+
+-- =========================
+-- VOL_DETAIL (execution de vol planifiee)
+-- =========================
+INSERT INTO vol_detail (date_heure_depart, date_heure_arrivee, statut, id_vol, id_avion) VALUES
+('2026-01-20 08:00:00', '2026-01-20 20:00:00', 'PROGRAMME', 1, 1),
+('2026-01-21 08:00:00', '2026-01-21 20:00:00', 'PROGRAMME', 1, 1),
+('2026-01-22 18:00:00', '2026-01-23 06:00:00', 'PROGRAMME', 1, 2),
+('2026-01-20 09:00:00', '2026-01-20 12:00:00', 'PROGRAMME', 2, 2),
+('2026-01-21 09:00:00', '2026-01-21 12:00:00', 'PROGRAMME', 2, 2),
+('2026-01-20 06:00:00', '2026-01-20 07:00:00', 'PROGRAMME', 3, 4),
+('2026-01-21 06:00:00', '2026-01-21 07:00:00', 'PROGRAMME', 3, 4),
+('2026-01-22 22:00:00', '2026-01-23 10:00:00', 'PROGRAMME', 4, 3),
+('2026-01-23 14:00:00', '2026-01-23 17:00:00', 'PROGRAMME', 5, 2);
+
+-- =========================
+-- VOL_CLASSE (places restantes par classe pour chaque vol_detail)
+-- =========================
+INSERT INTO vol_classe (id_vol_detail, id_classe, places_restantes) VALUES
+(1, 1, 148), (1, 2, 29), (1, 3, 20),
+(2, 1, 150), (2, 2, 30), (2, 3, 20),
+(3, 1, 130), (3, 2, 30), (3, 3, 10),
+(4, 1, 129), (4, 2, 30), (4, 3, 10),
+(5, 1, 130), (5, 2, 30), (5, 3, 10),
+(6, 1, 68), (6, 2, 8),
+(7, 1, 68), (7, 2, 8),
+(8, 1, 260), (8, 2, 40), (8, 3, 30), (8, 4, 20),
+(9, 1, 130), (9, 2, 30), (9, 3, 10);
+
+-- =========================
+-- PRIX_CLASSE_AGE (prix par classe et categorie pour chaque vol_detail)
+-- =========================
+-- Vol MD001 du 20/01 (id_vol_detail=1)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(1, 1, 1, 1200000.00), (1, 1, 2, 900000.00), (1, 1, 3, 120000.00), (1, 1, 4, 1080000.00),
+(1, 2, 1, 2200000.00), (1, 2, 2, 1650000.00), (1, 2, 3, 220000.00), (1, 2, 4, 1980000.00),
+(1, 3, 1, 3500000.00), (1, 3, 2, 2625000.00), (1, 3, 3, 350000.00), (1, 3, 4, 3150000.00);
+
+-- Vol MD001 du 21/01 (id_vol_detail=2)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(2, 1, 1, 1200000.00), (2, 1, 2, 900000.00), (2, 1, 3, 120000.00), (2, 1, 4, 1080000.00),
+(2, 2, 1, 2200000.00), (2, 2, 2, 1650000.00), (2, 2, 3, 220000.00), (2, 2, 4, 1980000.00),
+(2, 3, 1, 3500000.00), (2, 3, 2, 2625000.00), (2, 3, 3, 350000.00), (2, 3, 4, 3150000.00);
+
+-- Vol MD001 du 22/01 soir (id_vol_detail=3)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(3, 1, 1, 1250000.00), (3, 1, 2, 937500.00), (3, 1, 3, 125000.00), (3, 1, 4, 1125000.00),
+(3, 2, 1, 2300000.00), (3, 2, 2, 1725000.00), (3, 2, 3, 230000.00), (3, 2, 4, 2070000.00),
+(3, 3, 1, 3600000.00), (3, 3, 2, 2700000.00), (3, 3, 3, 360000.00), (3, 3, 4, 3240000.00);
+
+-- Vol MD002 du 20/01 (id_vol_detail=4)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(4, 1, 1, 600000.00), (4, 1, 2, 450000.00), (4, 1, 3, 60000.00), (4, 1, 4, 540000.00),
+(4, 2, 1, 1200000.00), (4, 2, 2, 900000.00), (4, 2, 3, 120000.00), (4, 2, 4, 1080000.00),
+(4, 3, 1, 1800000.00), (4, 3, 2, 1350000.00), (4, 3, 3, 180000.00), (4, 3, 4, 1620000.00);
+
+-- Vol MD002 du 21/01 (id_vol_detail=5)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(5, 1, 1, 600000.00), (5, 1, 2, 450000.00), (5, 1, 3, 60000.00), (5, 1, 4, 540000.00),
+(5, 2, 1, 1200000.00), (5, 2, 2, 900000.00), (5, 2, 3, 120000.00), (5, 2, 4, 1080000.00),
+(5, 3, 1, 1800000.00), (5, 3, 2, 1350000.00), (5, 3, 3, 180000.00), (5, 3, 4, 1620000.00);
+
+-- Vol MD003 du 20/01 (id_vol_detail=6)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(6, 1, 1, 350000.00), (6, 1, 2, 262500.00), (6, 1, 3, 35000.00), (6, 1, 4, 315000.00),
+(6, 2, 1, 700000.00), (6, 2, 2, 525000.00), (6, 2, 3, 70000.00), (6, 2, 4, 630000.00);
+
+-- Vol MD003 du 21/01 (id_vol_detail=7)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(7, 1, 1, 350000.00), (7, 1, 2, 262500.00), (7, 1, 3, 35000.00), (7, 1, 4, 315000.00),
+(7, 2, 1, 700000.00), (7, 2, 2, 525000.00), (7, 2, 3, 70000.00), (7, 2, 4, 630000.00);
+
+-- Vol AF101 du 22/01 (id_vol_detail=8)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(8, 1, 1, 1300000.00), (8, 1, 2, 975000.00), (8, 1, 3, 130000.00), (8, 1, 4, 1170000.00),
+(8, 2, 1, 2500000.00), (8, 2, 2, 1875000.00), (8, 2, 3, 250000.00), (8, 2, 4, 2250000.00),
+(8, 3, 1, 4000000.00), (8, 3, 2, 3000000.00), (8, 3, 3, 400000.00), (8, 3, 4, 3600000.00),
+(8, 4, 1, 6000000.00), (8, 4, 2, 4500000.00), (8, 4, 3, 600000.00), (8, 4, 4, 5400000.00);
+
+-- Vol MK501 du 23/01 (id_vol_detail=9)
+INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
+(9, 1, 1, 650000.00), (9, 1, 2, 487500.00), (9, 1, 3, 65000.00), (9, 1, 4, 585000.00),
+(9, 2, 1, 1300000.00), (9, 2, 2, 975000.00), (9, 2, 3, 130000.00), (9, 2, 4, 1170000.00),
+(9, 3, 1, 2000000.00), (9, 3, 2, 1500000.00), (9, 3, 3, 200000.00), (9, 3, 4, 1800000.00);
+
+-- =========================
+-- RESERVATION (avec FK vers classe_siege et categorie_age)
+-- =========================
+INSERT INTO reservation (date_reservation, numero_reservation, statut, id_utilisateur, id_vol_detail, id_classe, id_categorie) VALUES
+(CURRENT_TIMESTAMP, 'RES-001', 'CONFIRMEE', 2, 1, 1, 1),
+(CURRENT_TIMESTAMP, 'RES-002', 'CONFIRMEE', 2, 1, 1, 2),
+(CURRENT_TIMESTAMP, 'RES-003', 'EN_ATTENTE', 3, 1, 2, 1),
+(CURRENT_TIMESTAMP, 'RES-004', 'CONFIRMEE', 4, 4, 1, 1),
+(CURRENT_TIMESTAMP, 'RES-005', 'EN_ATTENTE', 5, 8, 3, 4);
 
 -- =========================
 -- PAIEMENT
 -- =========================
-INSERT INTO paiement (
-    date_paiement,
-    montant,
-    statut,
-    id_reservation
-) VALUES
-(CURRENT_TIMESTAMP, 1200.00, 'PAYE', 1),
-(NULL, 2300.00, 'NON_PAYE', 2),
-(CURRENT_TIMESTAMP, 600.00, 'PAYE', 3);
+INSERT INTO paiement (date_paiement, montant, statut, id_reservation) VALUES
+(CURRENT_TIMESTAMP, 1200000.00, 'PAYE', 1),
+(CURRENT_TIMESTAMP, 900000.00, 'PAYE', 2),
+(NULL, 2200000.00, 'NON_PAYE', 3),
+(CURRENT_TIMESTAMP, 600000.00, 'PAYE', 4),
+(NULL, 3600000.00, 'NON_PAYE', 5);

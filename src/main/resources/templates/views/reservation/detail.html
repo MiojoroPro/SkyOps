@@ -18,33 +18,56 @@
 
         <section class="card">
             <h3 class="section-title">Détails</h3>
-            <p><strong>Client :</strong> <span th:text="${reservation.utilisateur.nom} + ' ' + ${reservation.utilisateur.prenom}"></span></p>
+            <p><strong>Client :</strong> <span th:if="${reservation.utilisateur != null}" th:text="${reservation.utilisateur.nom} + ' ' + ${reservation.utilisateur.prenom}"></span></p>
             <p><strong>Vol :</strong> <span th:text="${reservation.volDetail.vol.numeroVol}"></span></p>
-            <p><strong>Exécution :</strong> <span th:text="${#temporals.format(reservation.volDetail.dateHeureDepart,'yyyy-MM-dd HH:mm')}"></span></p>
-            <p><strong>Classe :</strong> <span th:text="${reservation.classe}"></span></p>
-            <p><strong>Statut réservation :</strong> <span th:text="${reservation.statut}"></span></p>
+            <p><strong>Trajet :</strong> 
+                <span th:text="${reservation.volDetail.vol.aeroportDepart.ville}"></span> → 
+                <span th:text="${reservation.volDetail.vol.aeroportArrivee.ville}"></span>
+            </p>
+            <p><strong>Exécution :</strong> <span th:text="${#temporals.format(reservation.volDetail.dateHeureDepart,'dd/MM/yyyy HH:mm')}"></span></p>
+            <p><strong>Classe :</strong> <span th:text="${reservation.classeSiege != null ? reservation.classeSiege.libelle : '—'}"></span></p>
+            <p><strong>Catégorie passager :</strong> <span th:text="${reservation.categorieAge != null ? reservation.categorieAge.libelle : '—'}"></span></p>
+            <p><strong>Statut réservation :</strong> 
+                <span th:switch="${reservation.statut}">
+                    <span th:case="'EN_ATTENTE'" class="badge" style="background:#ff9800;color:white">EN ATTENTE</span>
+                    <span th:case="'CONFIRMEE'" class="badge" style="background:#4caf50;color:white">CONFIRMÉE</span>
+                    <span th:case="'ANNULÉ'" class="badge" style="background:#f44336;color:white">ANNULÉE</span>
+                    <span th:case="*" th:text="${reservation.statut}"></span>
+                </span>
+            </p>
 
             <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-                <a th:if="${reservation.statut != 'ANNULÉ' and (paiement == null or paiement.statut != 'PAYE')}" th:href="@{/reservations/pay/{id}(id=${reservation.idReservation})}"
+                <a th:if="${reservation.statut != 'ANNULÉ' and (paiement == null or paiement.statut != 'PAYE')}" 
+                   th:href="@{/reservations/pay/{id}(id=${reservation.idReservation})}"
                    class="btn btn-save" onclick="return confirm('Payer maintenant ?')">Payer maintenant</a>
-                <a th:if="${reservation.statut != 'ANNULÉ'}" th:href="@{/reservations/cancel/{id}(id=${reservation.idReservation})}"
+                <a th:if="${reservation.statut != 'ANNULÉ'}" 
+                   th:href="@{/reservations/cancel/{id}(id=${reservation.idReservation})}"
                    class="btn-delete" onclick="return confirm('Annuler cette réservation et rembourser si payé ?')">Annuler la réservation</a>
-                <span th:if="${reservation.statut == 'ANNULÉ'}" class="badge">Réservation annulée</span>
             </div>
         </section>
 
         <section class="card">
             <h3 class="section-title">Paiement</h3>
             <div th:if="${paiement != null}">
-                <p><strong>Montant :</strong> <span th:text="${paiement.montant}"></span> EUR</p>
-                <p><strong>Statut :</strong> <span th:text="${paiement.statut}"></span></p>
-                <p><strong>Date paiement :</strong> <span th:text="${paiement.datePaiement}"></span></p>
-                <p th:if="${paiement.statut == 'REMBOURSE'}" class="form-help">Un remboursement simulé a été enregistré.</p>
+                <p><strong>Montant :</strong> <span th:text="${#numbers.formatDecimal(paiement.montant,0,0)} + ' MGA'"></span></p>
+                <p><strong>Statut :</strong> 
+                    <span th:switch="${paiement.statut}">
+                        <span th:case="'NON_PAYE'" class="badge" style="background:#ff9800;color:white">NON PAYÉ</span>
+                        <span th:case="'PAYE'" class="badge" style="background:#4caf50;color:white">PAYÉ</span>
+                        <span th:case="'REMBOURSE'" class="badge" style="background:#9c27b0;color:white">REMBOURSÉ</span>
+                        <span th:case="*" th:text="${paiement.statut}"></span>
+                    </span>
+                </p>
+                <p th:if="${paiement.datePaiement != null}"><strong>Date paiement :</strong> <span th:text="${#temporals.format(paiement.datePaiement,'dd/MM/yyyy HH:mm')}"></span></p>
             </div>
             <div th:if="${paiement == null}">
-                <p>Aucun paiement enregistré.</p>
+                <p style="color:#999;">Aucun paiement enregistré.</p>
             </div>
         </section>
+
+        <div style="margin-top: 20px;">
+            <a th:href="@{/reservations}" class="btn btn-secondary">Retour aux réservations</a>
+        </div>
 
     </main>
 </div>

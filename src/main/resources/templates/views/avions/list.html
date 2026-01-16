@@ -56,8 +56,23 @@
                         <td th:text="${avion.idAvion}"></td>
                         <td th:text="${avion.compagnie.nom}"></td>
                         <td th:text="${avion.modele}"></td>
-                        <td th:text="${'Éco: ' + avion.capaciteEconomique + ' / 1ère: ' + avion.capacitePremiere + ' (Total: ' + avion.capaciteTotale + ')'}"></td>
-                        <td th:text="${avion.statut}"></td>
+                        <td>
+                            <span th:each="ac, stat : ${avion.avionClasses}" 
+                                  th:text="${ac.classeSiege.code} + ': ' + ${ac.capacite} + (${!stat.last} ? ' / ' : '')">
+                            </span>
+                            <span th:if="${avion.avionClasses == null or avion.avionClasses.isEmpty()}" style="color: #999;">
+                                Non défini
+                            </span>
+                            <em style="color: #666;" th:text="' (Total: ' + ${avion.capaciteTotale} + ')'"></em>
+                        </td>
+                        <td>
+                            <span th:switch="${avion.statut}">
+                                <span th:case="'DISPONIBLE'" class="badge" style="background:#4caf50;color:white">DISPONIBLE</span>
+                                <span th:case="'MAINTENANCE'" class="badge" style="background:#ff9800;color:white">MAINTENANCE</span>
+                                <span th:case="'HORS_SERVICE'" class="badge" style="background:#f44336;color:white">HORS SERVICE</span>
+                                <span th:case="*" th:text="${avion.statut}"></span>
+                            </span>
+                        </td>
                         <td>
                             <a th:href="@{/avions/edit/{id}(id=${avion.idAvion})}" class="btn-edit">Modifier</a>
                             <a th:href="@{/avions/delete/{id}(id=${avion.idAvion})}"

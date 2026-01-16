@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajouter Avion</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .capacity-section { margin-top: 20px; }
+        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .capacity-item { padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .capacity-item label { font-weight: bold; display: block; margin-bottom: 5px; }
+    </style>
 </head>
 <body>
 
@@ -41,24 +47,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Capacité Économique</label>
-                        <input type="number" th:field="*{capaciteEconomique}" min="0" required>
-                        <span class="form-help">Nombre de sièges en classe économique</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Capacité Première</label>
-                        <input type="number" th:field="*{capacitePremiere}" min="0" required>
-                        <span class="form-help">Nombre de sièges en première classe</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Capacité Premium</label>
-                        <input type="number" th:field="*{capacitePremium}" min="0" required>
-                        <span class="form-help">Nombre de sièges en classe premium</span>
-                    </div>
-
-                    <div class="form-group">
                         <label>Statut</label>
                         <select th:field="*{statut}" required>
                             <option value="">Sélectionner un statut</option>
@@ -68,7 +56,27 @@
                         </select>
                     </div>
 
-                    <div class="form-actions">
+                    <!-- Capacités par classe de siège -->
+                    <div class="capacity-section">
+                        <h3>Capacité par classe de siège</h3>
+                        <p style="color: #666; margin-bottom: 15px;">Définissez le nombre de sièges pour chaque classe</p>
+                        
+                        <div class="capacity-grid">
+                            <div th:each="classe : ${classes}" class="capacity-item">
+                                <label th:text="${classe.libelle}">Classe</label>
+                                <input type="number" 
+                                       th:name="'capacite_' + ${classe.idClasse}" 
+                                       min="0" 
+                                       value="0" 
+                                       placeholder="Nombre de sièges" />
+                            </div>
+                            <div th:if="${classes == null or classes.isEmpty()}" style="color: #999;">
+                                Aucune classe de siège configurée
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions" style="margin-top: 20px;">
                         <button type="submit" class="btn btn-add">Ajouter</button>
                         <a href="/avions" class="btn btn-secondary">Annuler</a>
                     </div>

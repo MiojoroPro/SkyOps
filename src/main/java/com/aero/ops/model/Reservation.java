@@ -20,12 +20,10 @@ public class Reservation {
     @Column(name = "date_reservation")
     private LocalDateTime dateReservation;
 
-    @Column(name = "numero_reservation")
+    @Column(name = "numero_reservation", unique = true)
     private String numeroReservation;
 
-    @Column(name = "classe")
-    private String classe;
-
+    @Column(name = "statut")
     private String statut;
 
     @ManyToOne
@@ -36,6 +34,14 @@ public class Reservation {
     @JoinColumn(name = "id_vol_detail")
     private VolDetail volDetail;
 
-    @OneToOne(mappedBy = "reservation")
+    @ManyToOne
+    @JoinColumn(name = "id_classe")
+    private ClasseSiege classeSiege;
+
+    @ManyToOne
+    @JoinColumn(name = "id_categorie")
+    private CategorieAge categorieAge;
+
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     private Paiement paiement;
 }

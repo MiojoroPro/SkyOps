@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="'Détails du vol ' + ${vol.numeroVol}">Détails Vol</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .class-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+        .class-badge { 
+            padding: 3px 8px; 
+            border-radius: 4px; 
+            font-size: 0.85em; 
+            background: #e3f2fd; 
+            color: #1565c0; 
+        }
+    </style>
 </head>
 <body>
 
@@ -18,14 +28,15 @@
                 <h1 th:text="'Détails du vol ' + ${vol.numeroVol}"></h1>
             </div>
             <div>
-                <a th:href="@{/reservations/vol/{id}(id=${vol.idVol})}" class="btn btn-apply">Voir réservations</a>
-                <a th:href="@{/vol/{id}/max-revenue(id=${vol.idVol})}" class="btn btn-apply">Recette max</a>
+                <a th:href="@{/vol/{id}/details/add(id=${vol.idVol})}" class="btn btn-apply">+ Ajouter exécution</a>
+                <a th:href="@{/reservations/vol/{id}(id=${vol.idVol})}" class="btn btn-edit">Voir réservations</a>
+                <a th:href="@{/vol/{id}/max-revenue(id=${vol.idVol})}" class="btn btn-secondary">Recette max</a>
             </div>
         </header>
 
         <section class="table-wrapper">
             <header>
-                <h2 class="section-title">Exécutions</h2>
+                <h2 class="section-title">Exécutions programmées</h2>
             </header>
 
             <div class="table-responsive">
@@ -34,8 +45,11 @@
                     <tr>
                         <th>ID</th>
                         <th>Avion</th>
-                        <th>Date / Heure départ</th>
-                        <th>Date / Heure arrivée</th>
+                        <th>Date / Heure depart</th>
+                        <th>Date / Heure arrivee</th>
+                        <th>Places disponibles</th>
+                        <th>Places reservees</th>
+                        <th>CA Reel</th>
                         <th>Recette max</th>
                         <th>Statut</th>
                         <th>Actions</th>
@@ -48,17 +62,36 @@
                         <td th:text="${detail.avion != null ? detail.avion.modele : ''}"></td>
                         <td th:text="${#temporals.format(detail.dateHeureDepart,'yyyy-MM-dd HH:mm')}"></td>
                         <td th:text="${#temporals.format(detail.dateHeureArrivee,'yyyy-MM-dd HH:mm')}"></td>
+                        <td>
+                            <div class="class-badges">
+                                <span th:each="vc : ${detail.volClasses}" 
+                                      class="class-badge"
+                                      th:text="${vc.classeSiege.code} + ': ' + ${vc.placesRestantes}">
+                                </span>
+                                <span th:if="${detail.volClasses == null or detail.volClasses.isEmpty()}" 
+                                      style="color: #999;">Non defini</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge" style="background:#2196f3;color:white" 
+                                  th:text="${detail.nombrePlacesReservees} + ' place(s)'"></span>
+                        </td>
+                        <td>
+                            <span style="color:#4caf50;font-weight:bold" 
+                                  th:text="${detail.chiffreAffairesReel != null ? #numbers.formatDecimal(detail.chiffreAffairesReel,0,0) + ' MGA' : '0 MGA'}"></span>
+                        </td>
                         <td th:text="${detail.maxRevenue != null ? #numbers.formatDecimal(detail.maxRevenue,0,0) + ' MGA' : '—'}"></td>
                         <td>
                             <span th:switch="${detail.statut}">
                                 <span th:case="'PROGRAMME'" class="badge">PROGRAMMÉ</span>
-                                <span th:case="'CONFIRME'" class="badge">CONFIRMÉ</span>
-                                <span th:case="'ANNULÉ'" class="badge">ANNULÉ</span>
+                                <span th:case="'CONFIRME'" class="badge" style="background:#4caf50;color:white">CONFIRMÉ</span>
+                                <span th:case="'ANNULÉ'" class="badge" style="background:#f44336;color:white">ANNULÉ</span>
+                                <span th:case="'TERMINE'" class="badge" style="background:#9e9e9e;color:white">TERMINÉ</span>
                                 <span th:case="*" th:text="${detail.statut}"></span>
                             </span>
                         </td>
                         <td>
-                            <a th:href="@{/reservations/book/{id}(id=${detail.idVolDetail})}" class="btn btn-edit">Réserver</a>
+                            <a th:href="@{/reservations/book/{id}(id=${detail.idVolDetail})}" class="btn btn-apply">Réserver</a>
                             <a th:href="@{/vol/details/delete/{id}(id=${detail.idVolDetail})}"
                                class="btn-delete"
                                onclick="return confirm('Supprimer cette exécution ?')">Supprimer</a>
@@ -68,54 +101,6 @@
 
                 </table>
             </div>
-        </section>
-
-        <section class="content-section">
-            <article class="card">
-                <h2 class="section-title">Ajouter une exécution</h2>
-
-                <form th:action="@{/vol/{id}/details/add(id=${vol.idVol})}" th:object="${newDetail}" method="post">
-
-                    <div class="form-group">
-                        <label>Avion</label>
-                        <select th:field="*{avion.idAvion}" required>
-                            <option value="">Sélectionner un avion</option>
-                            <option th:each="av : ${avions}"
-                                    th:value="${av.idAvion}"
-                                    th:text="${av.modele} + ' (' + ${av.compagnie.nom} + ')'">
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Date / Heure départ</label>
-                        <input type="datetime-local" th:field="*{dateHeureDepart}" />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Date / Heure arrivée</label>
-                        <input type="datetime-local" th:field="*{dateHeureArrivee}" />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Statut</label>
-                        <select th:field="*{statut}" required>
-                            <option value="">Sélectionner un statut</option>
-                            <option value="PROGRAMME">PROGRAMMÉ</option>
-                            <option value="CONFIRME">CONFIRMÉ</option>
-                            <option value="ANNULÉ">ANNULÉ</option>
-                            <option value="TERMINE">TERMINÉ</option>
-                            <option value="RETARDE">RETARDÉ</option>
-                        </select>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-edit">Ajouter</button>
-                        <a th:href="@{/vol}" class="btn btn-secondary">Retour</a>
-                    </div>
-
-                </form>
-            </article>
         </section>
 
         <footer class="main-footer">

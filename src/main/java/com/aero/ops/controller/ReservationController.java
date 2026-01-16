@@ -1,18 +1,13 @@
 package com.aero.ops.controller;
 
-import com.aero.ops.model.Paiement;
-import com.aero.ops.model.Reservation;
-import com.aero.ops.model.Utilisateur;
-import com.aero.ops.model.VolDetail;
-import com.aero.ops.service.PaiementService;
-import com.aero.ops.service.ReservationService;
-import com.aero.ops.service.UtilisateurService;
-import com.aero.ops.service.VolDetailService;
-import com.aero.ops.service.VolService;
+import com.aero.ops.model.*;
+import com.aero.ops.service.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -25,17 +20,29 @@ public class ReservationController {
     private final PaiementService paiementService;
     private final VolDetailService volDetailService;
     private final VolService volService;
+    private final ClasseSiegeService classeSiegeService;
+    private final CategorieAgeService categorieAgeService;
+    private final VolClasseService volClasseService;
+    private final PrixClasseAgeService prixClasseAgeService;
 
     public ReservationController(ReservationService reservationService,
                                  UtilisateurService utilisateurService,
                                  PaiementService paiementService,
                                  VolDetailService volDetailService,
-                                 VolService volService) {
+                                 VolService volService,
+                                 ClasseSiegeService classeSiegeService,
+                                 CategorieAgeService categorieAgeService,
+                                 VolClasseService volClasseService,
+                                 PrixClasseAgeService prixClasseAgeService) {
         this.reservationService = reservationService;
         this.utilisateurService = utilisateurService;
         this.paiementService = paiementService;
         this.volDetailService = volDetailService;
         this.volService = volService;
+        this.classeSiegeService = classeSiegeService;
+        this.categorieAgeService = categorieAgeService;
+        this.volClasseService = volClasseService;
+        this.prixClasseAgeService = prixClasseAgeService;
     }
 
     // Show booking form for a specific VolDetail
@@ -48,26 +55,61 @@ public class ReservationController {
         model.addAttribute("detail", detail);
         model.addAttribute("reservation", new Reservation());
         model.addAttribute("utilisateurs", utilisateurService.getAll());
+        model.addAttribute("classes", classeSiegeService.getAll());
+        model.addAttribute("categories", categorieAgeService.getAll());
+        // Pass available places per class
+        model.addAttribute("volClasses", volClasseService.getByVolDetail(detailId));
+        // Pass prices per class/age
+        model.addAttribute("prixClasses", prixClasseAgeService.getByVolDetail(detailId));
         return "views/reservation/book";
     }
 
-    // Process booking (simulation of payment)
+    // Process booking
     @PostMapping("/book/{detailId}")
+    @Transactional
     public String book(@PathVariable Long detailId,
-                       @ModelAttribute Reservation reservation,
+                       @RequestParam("classeSiegeId") Long classeSiegeId,
+                       @RequestParam("categorieAgeId") Long categorieAgeId,
+                       @RequestParam(value = "utilisateurId", required = false) Long utilisateurId,
                        @RequestParam(value = "payerMaintenant", required = false) boolean payerMaintenant,
                        Model model) {
         VolDetail detail = volDetailService.getById(detailId);
         if (detail == null) {
             return "redirect:/vol";
         }
-        reservation.setVolDetail(detail);
-        // Resolve utilisateur by id if set
-        if (reservation.getUtilisateur() != null && reservation.getUtilisateur().getIdUtilisateur() != null) {
-            reservation.setUtilisateur(utilisateurService.getById(reservation.getUtilisateur().getIdUtilisateur()));
+        
+        ClasseSiege classeSiege = classeSiegeService.getById(classeSiegeId);
+        CategorieAge categorieAge = categorieAgeService.getById(categorieAgeId);
+        
+        if (classeSiege == null || categorieAge == null) {
+            model.addAttribute("error", "Classe ou catégorie invalide");
+            return prepareBookFormModel(model, detailId, detail);
         }
-        // Generate a reservation number
+        
+        // Check available places
+        if (!volClasseService.hasPlacesDisponibles(detailId, classeSiegeId)) {
+            model.addAttribute("error", "Plus de places disponibles pour cette classe");
+            return prepareBookFormModel(model, detailId, detail);
+        }
+        
+        // Get the price
+        BigDecimal prix = prixClasseAgeService.getMontant(detailId, classeSiegeId, categorieAgeId);
+        if (prix == null) {
+            model.addAttribute("error", "Prix non défini pour cette combinaison classe/catégorie");
+            return prepareBookFormModel(model, detailId, detail);
+        }
+        
+        // Create reservation
+        Reservation reservation = new Reservation();
+        reservation.setVolDetail(detail);
+        reservation.setClasseSiege(classeSiege);
+        reservation.setCategorieAge(categorieAge);
         reservation.setNumeroReservation("RES-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        
+        if (utilisateurId != null) {
+            reservation.setUtilisateur(utilisateurService.getById(utilisateurId));
+        }
+        
         if (payerMaintenant) {
             reservation.setStatut("CONFIRMEE");
         } else {
@@ -75,19 +117,12 @@ public class ReservationController {
         }
 
         try {
+            // Create reservation (this decrements available places)
             Reservation saved = reservationService.create(reservation);
 
-            // Create paiement record (simulation) with class-specific price
+            // Create payment record
             Paiement paiement = new Paiement();
-            double montant = 0.0;
-            if ("ECONOMIQUE".equalsIgnoreCase(reservation.getClasse())) {
-                montant = detail.getPrixEconomique() != null ? detail.getPrixEconomique() : 0.0;
-            } else if ("PREMIERE".equalsIgnoreCase(reservation.getClasse())) {
-                montant = detail.getPrixPremiere() != null ? detail.getPrixPremiere() : 0.0;
-            } else if ("PREMIUM".equalsIgnoreCase(reservation.getClasse())) {
-                montant = detail.getPrixPremium() != null ? detail.getPrixPremium() : 0.0;
-            }
-            paiement.setMontant(montant);
+            paiement.setMontant(prix);
             if (payerMaintenant) {
                 paiement.setStatut("PAYE");
                 paiement.setDatePaiement(LocalDateTime.now());
@@ -97,13 +132,26 @@ public class ReservationController {
             paiement.setReservation(saved);
             paiementService.create(paiement);
 
-            return "redirect:/reservations/user/" + saved.getUtilisateur().getIdUtilisateur();
+            if (saved.getUtilisateur() != null) {
+                return "redirect:/reservations/user/" + saved.getUtilisateur().getIdUtilisateur();
+            } else {
+                return "redirect:/reservations/" + saved.getIdReservation();
+            }
         } catch (IllegalStateException ex) {
             model.addAttribute("error", ex.getMessage());
-            model.addAttribute("detail", detail);
-            model.addAttribute("utilisateurs", utilisateurService.getAll());
-            return "views/reservation/book";
+            return prepareBookFormModel(model, detailId, detail);
         }
+    }
+    
+    private String prepareBookFormModel(Model model, Long detailId, VolDetail detail) {
+        model.addAttribute("detail", detail);
+        model.addAttribute("reservation", new Reservation());
+        model.addAttribute("utilisateurs", utilisateurService.getAll());
+        model.addAttribute("classes", classeSiegeService.getAll());
+        model.addAttribute("categories", categorieAgeService.getAll());
+        model.addAttribute("volClasses", volClasseService.getByVolDetail(detailId));
+        model.addAttribute("prixClasses", prixClasseAgeService.getByVolDetail(detailId));
+        return "views/reservation/book";
     }
 
     // List reservations (with optional filters)
@@ -153,8 +201,9 @@ public class ReservationController {
         return "views/reservation/detail";
     }
 
-    // Pay for a reservation (simulation)
+    // Pay for a reservation
     @GetMapping("/pay/{id}")
+    @Transactional
     public String pay(@PathVariable Long id) {
         Reservation r = reservationService.getById(id);
         if (r == null) {
@@ -164,35 +213,23 @@ public class ReservationController {
             return "redirect:/reservations/" + id;
         }
 
+        // Get the price from prix_classe_age
+        BigDecimal montant = reservationService.getPrix(r);
+        if (montant == null) {
+            montant = BigDecimal.ZERO;
+        }
+
+        final BigDecimal finalMontant = montant;
+        
         // If a paiement exists, update it; otherwise create
         paiementService.getByReservation(id).ifPresentOrElse(p -> {
             p.setStatut("PAYE");
             p.setDatePaiement(LocalDateTime.now());
-            if (r.getVolDetail() != null) {
-                double montant = 0.0;
-                if ("ECONOMIQUE".equalsIgnoreCase(r.getClasse())) {
-                    montant = r.getVolDetail().getPrixEconomique() != null ? r.getVolDetail().getPrixEconomique() : 0.0;
-                } else if ("PREMIERE".equalsIgnoreCase(r.getClasse())) {
-                    montant = r.getVolDetail().getPrixPremiere() != null ? r.getVolDetail().getPrixPremiere() : 0.0;
-                } else if ("PREMIUM".equalsIgnoreCase(r.getClasse())) {
-                    montant = r.getVolDetail().getPrixPremium() != null ? r.getVolDetail().getPrixPremium() : 0.0;
-                }
-                p.setMontant(montant);
-            }
+            p.setMontant(finalMontant);
             paiementService.update(p);
         }, () -> {
-            com.aero.ops.model.Paiement p = new com.aero.ops.model.Paiement();
-            double montant = 0.0;
-            if (r.getVolDetail() != null) {
-                if ("ECONOMIQUE".equalsIgnoreCase(r.getClasse())) {
-                    montant = r.getVolDetail().getPrixEconomique() != null ? r.getVolDetail().getPrixEconomique() : 0.0;
-                } else if ("PREMIERE".equalsIgnoreCase(r.getClasse())) {
-                    montant = r.getVolDetail().getPrixPremiere() != null ? r.getVolDetail().getPrixPremiere() : 0.0;
-                } else if ("PREMIUM".equalsIgnoreCase(r.getClasse())) {
-                    montant = r.getVolDetail().getPrixPremium() != null ? r.getVolDetail().getPrixPremium() : 0.0;
-                }
-            }
-            p.setMontant(montant);
+            Paiement p = new Paiement();
+            p.setMontant(finalMontant);
             p.setStatut("PAYE");
             p.setDatePaiement(LocalDateTime.now());
             p.setReservation(r);
@@ -204,15 +241,18 @@ public class ReservationController {
         return "redirect:/reservations/" + id;
     }
 
-    // Cancel a reservation (simulate refund if paid)
+    // Cancel a reservation (restore places, refund if paid)
     @GetMapping("/cancel/{id}")
+    @Transactional
     public String cancel(@PathVariable Long id) {
         Reservation r = reservationService.getById(id);
         if (r == null) {
             return "redirect:/reservations";
         }
-        r.setStatut("ANNULÉ");
-        reservationService.update(r);
+        
+        // Use the cancel method which restores places
+        reservationService.cancel(r);
+        
         paiementService.getByReservation(id).ifPresent(p -> {
             if ("PAYE".equals(p.getStatut())) {
                 p.setStatut("REMBOURSE");
