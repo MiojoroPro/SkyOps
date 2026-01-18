@@ -26,6 +26,7 @@ public class VolController {
     private final CategorieAgeService categorieAgeService;
     private final VolClasseService volClasseService;
     private final PrixClasseAgeService prixClasseAgeService;
+    private final RemiseClasseCategorieService remiseService;
 
     public VolController(VolService volService,
                          VolDetailService volDetailService,
@@ -35,7 +36,8 @@ public class VolController {
                          ClasseSiegeService classeSiegeService,
                          CategorieAgeService categorieAgeService,
                          VolClasseService volClasseService,
-                         PrixClasseAgeService prixClasseAgeService) {
+                         PrixClasseAgeService prixClasseAgeService,
+                         RemiseClasseCategorieService remiseService) {
         this.volService = volService;
         this.volDetailService = volDetailService;
         this.compagnieService = compagnieService;
@@ -45,6 +47,7 @@ public class VolController {
         this.categorieAgeService = categorieAgeService;
         this.volClasseService = volClasseService;
         this.prixClasseAgeService = prixClasseAgeService;
+        this.remiseService = remiseService;
     }
 
     // Liste des vols
@@ -127,11 +130,26 @@ public class VolController {
     @GetMapping("/{id}/details/add")
     public String addVolDetailForm(@PathVariable Long id, Model model) {
         Vol vol = volService.getById(id);
+        List<ClasseSiege> classes = classeSiegeService.getAll();
+        List<CategorieAge> categories = categorieAgeService.getAll();
+        
+        // Préparer la matrice de remises pour l'affichage
+        Map<Long, Map<Long, java.math.BigDecimal>> matriceRemises = new LinkedHashMap<>();
+        for (ClasseSiege classe : classes) {
+            Map<Long, java.math.BigDecimal> remisesCategorie = new LinkedHashMap<>();
+            for (CategorieAge categorie : categories) {
+                java.math.BigDecimal pourcentage = remiseService.getPourcentage(classe.getIdClasse(), categorie.getIdCategorie());
+                remisesCategorie.put(categorie.getIdCategorie(), pourcentage);
+            }
+            matriceRemises.put(classe.getIdClasse(), remisesCategorie);
+        }
+        
         model.addAttribute("vol", vol);
         model.addAttribute("newDetail", new VolDetail());
         model.addAttribute("avions", avionService.getAll());
-        model.addAttribute("classes", classeSiegeService.getAll());
-        model.addAttribute("categories", categorieAgeService.getAll());
+        model.addAttribute("classes", classes);
+        model.addAttribute("categories", categories);
+        model.addAttribute("matriceRemises", matriceRemises);
         return "views/vol/add-detail";
     }
 
@@ -170,15 +188,21 @@ public class VolController {
             }
         }
         
-        // Créer les entrées PrixClasseAge (prix par classe et catégorie d'âge)
+        // Créer les entrées PrixClasseAge (prix basé sur tarif adulte + pourcentage par classe/catégorie)
         for (ClasseSiege classe : classeSiegeService.getAll()) {
-            for (CategorieAge categorie : categorieAgeService.getAll()) {
-                String prixKey = "prix_" + classe.getIdClasse() + "_" + categorie.getIdCategorie();
-                String prixStr = allParams.get(prixKey);
-                if (prixStr != null && !prixStr.isBlank()) {
-                    try {
-                        BigDecimal prix = new BigDecimal(prixStr);
-                        if (prix.compareTo(BigDecimal.ZERO) >= 0) {
+            // Récupérer le tarif adulte pour cette classe
+            String prixAdulteKey = "prix_adulte_" + classe.getIdClasse();
+            String prixAdulteStr = allParams.get(prixAdulteKey);
+            
+            if (prixAdulteStr != null && !prixAdulteStr.isBlank()) {
+                try {
+                    BigDecimal prixAdulte = new BigDecimal(prixAdulteStr);
+                    if (prixAdulte.compareTo(BigDecimal.ZERO) >= 0) {
+                        // Générer les prix pour toutes les catégories d'âge
+                        for (CategorieAge categorie : categorieAgeService.getAll()) {
+                            // Utiliser le pourcentage spécifique à la classe et catégorie
+                            BigDecimal prix = remiseService.calculerPrix(prixAdulte, classe.getIdClasse(), categorie.getIdCategorie());
+                            
                             PrixClasseAge pca = new PrixClasseAge();
                             pca.setVolDetail(saved);
                             pca.setClasseSiege(classe);
@@ -186,8 +210,8 @@ public class VolController {
                             pca.setPrix(prix);
                             prixClasseAgeService.save(pca);
                         }
-                    } catch (NumberFormatException ignored) {}
-                }
+                    }
+                } catch (NumberFormatException ignored) {}
             }
         }
         

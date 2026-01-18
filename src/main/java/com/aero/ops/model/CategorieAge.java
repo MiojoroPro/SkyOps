@@ -31,4 +31,7 @@ public class CategorieAge {
 
     @OneToMany(mappedBy = "categorieAge")
     private List<Reservation> reservations;
+
+    @OneToMany(mappedBy = "categorieAge")
+    private List<RemiseClasseCategorie> remises;
 }

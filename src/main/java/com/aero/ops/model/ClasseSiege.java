@@ -31,4 +31,7 @@ public class ClasseSiege {
 
     @OneToMany(mappedBy = "classeSiege")
     private List<Reservation> reservations;
+
+    @OneToMany(mappedBy = "classeSiege")
+    private List<RemiseClasseCategorie> remises;
 }

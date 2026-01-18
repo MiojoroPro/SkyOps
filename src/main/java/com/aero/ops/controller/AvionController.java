@@ -105,36 +105,16 @@ public class AvionController {
     @PostMapping("/edit/{id}")
     @Transactional
     public String edit(@PathVariable Long id,
-                       @ModelAttribute Avion avion,
-                       @RequestParam Map<String, String> allParams) {
+                       @ModelAttribute Avion avion) {
         avion.setIdAvion(id);
         
-        // Résoudre la compagnie
+        // Resoudre la compagnie
         if (avion.getCompagnie() != null && avion.getCompagnie().getIdCompagnie() != null) {
             avion.setCompagnie(compagnieService.getById(avion.getCompagnie().getIdCompagnie()));
         }
         
+        // On ne modifie pas les capacites - elles sont fixes depuis la creation
         avionService.update(avion);
-        
-        // Supprimer les anciennes capacités et recréer
-        avionClasseService.deleteByAvion(id);
-        
-        for (ClasseSiege classe : classeSiegeService.getAll()) {
-            String capaciteKey = "capacite_" + classe.getIdClasse();
-            String capaciteStr = allParams.get(capaciteKey);
-            if (capaciteStr != null && !capaciteStr.isBlank()) {
-                try {
-                    int capacite = Integer.parseInt(capaciteStr);
-                    if (capacite > 0) {
-                        AvionClasse ac = new AvionClasse();
-                        ac.setAvion(avion);
-                        ac.setClasseSiege(classe);
-                        ac.setCapacite(capacite);
-                        avionClasseService.save(ac);
-                    }
-                } catch (NumberFormatException ignored) {}
-            }
-        }
         
         return "redirect:/avions";
     }

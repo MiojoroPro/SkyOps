@@ -31,8 +31,12 @@
                         <th>Numéro</th>
                         <th>Vol</th>
                         <th>Exécution</th>
+                        <th>Classe</th>
+                        <th>Catégorie</th>
                         <th>Date réservation</th>
                         <th>Statut</th>
+                        <th>Paiement</th>
+                        <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -40,8 +44,9 @@
                         <td th:text="${r.idReservation}"></td>
                         <td th:text="${r.numeroReservation}"></td>
                         <td th:text="${r.volDetail != null ? r.volDetail.vol.numeroVol : ''}"></td>
-                        <td th:text="${r.classe}"></td>
                         <td th:text="${r.volDetail != null ? #temporals.format(r.volDetail.dateHeureDepart,'yyyy-MM-dd HH:mm') : ''}"></td>
+                        <td th:text="${r.classeSiege != null ? r.classeSiege.libelle : ''}"></td>
+                        <td th:text="${r.categorieAge != null ? r.categorieAge.libelle : ''}"></td>
                         <td th:text="${#temporals.format(r.dateReservation,'yyyy-MM-dd HH:mm')}"></td>
                         <td th:text="${r.statut}"></td>
                         <td>
@@ -50,8 +55,8 @@
                         </td>
                         <td>
                             <a th:href="@{/reservations/{id}(id=${r.idReservation})}" class="btn btn-apply">Voir</a>
-                            <a th:if="${r.statut != 'ANNULÉ' and (r.paiement == null or r.paiement.statut != 'PAYE')}" th:href="@{/reservations/pay/{id}(id=${r.idReservation})}" class="btn btn-save" onclick="return confirm('Effectuer le paiement maintenant ?')">Payer</a>
-                            <a th:if="${r.statut != 'ANNULÉ'}" th:href="@{/reservations/cancel/{id}(id=${r.idReservation})}" class="btn-delete" onclick="return confirm('Annuler cette réservation ?')">Annuler</a>
+                            <a th:if="${r.statut != 'ANNULE' and (r.paiement == null or r.paiement.statut != 'PAYE')}" th:href="@{/reservations/pay/{id}(id=${r.idReservation})}" class="btn btn-save" onclick="return confirm('Effectuer le paiement maintenant ?')">Payer</a>
+                            <a th:if="${r.statut != 'ANNULE'}" th:href="@{/reservations/cancel/{id}(id=${r.idReservation})}" class="btn-delete" onclick="return confirm('Annuler cette réservation ?')">Annuler</a>
                         </td>
                     </tr>
                     </tbody>

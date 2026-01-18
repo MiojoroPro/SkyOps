@@ -123,6 +123,18 @@ CREATE TABLE categorie_age (
 );
 
 -- =========================
+-- TABLE REMISE_CLASSE_CATEGORIE (pourcentage du tarif adulte par classe et categorie)
+-- =========================
+CREATE TABLE remise_classe_categorie (
+    id_classe INT,
+    id_categorie INT,
+    pourcentage NUMERIC(5,2) NOT NULL DEFAULT 100.00,
+    PRIMARY KEY (id_classe, id_categorie),
+    CONSTRAINT fk_remise_classe FOREIGN KEY (id_classe) REFERENCES classe_siege(id_classe),
+    CONSTRAINT fk_remise_categorie FOREIGN KEY (id_categorie) REFERENCES categorie_age(id_categorie)
+);
+
+-- =========================
 -- TABLE PRIX_CLASSE_AGE
 -- =========================
 CREATE TABLE prix_classe_age (

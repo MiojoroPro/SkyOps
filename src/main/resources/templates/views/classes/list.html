@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classes de Siege | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <h1>Classes de Siege</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span>Configuration</span>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+                <p class="badge">Configuration</p>
+                <h2 class="section-title">Vue d'ensemble</h2>
+                <p class="module-description">Classes de siege disponibles pour les avions</p>
+                <h3 th:text="${classes.size()} + ' classe(s)'"></h3>
+            </article>
+        </section>
+
+        <section class="table-wrapper">
+            <header>
+                <h2 class="section-title">Classes configurees</h2>
+                <a href="/classes/add" class="btn btn-add">Ajouter</a>
+            </header>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Libelle</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="classe : ${classes}">
+                        <td th:text="${classe.idClasse}"></td>
+                        <td><span class="badge" th:text="${classe.code}"></span></td>
+                        <td th:text="${classe.libelle}"></td>
+                        <td>
+                            <a th:href="@{/classes/edit/{id}(id=${classe.idClasse})}" class="btn-edit">Modifier</a>
+                            <a th:href="@{/classes/delete/{id}(id=${classe.idClasse})}" class="btn-delete" onclick="return confirm('Supprimer cette classe ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${classes.isEmpty()}">
+                        <td colspan="4" style="text-align:center;color:#999;">Aucune classe configuree</td>
+                    </tr>
+                    </tbody>
+
+                </table>
+            </div>
+        </section>
+
+        <footer class="main-footer">
+            <span>2026 Compagnie aerienne</span>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

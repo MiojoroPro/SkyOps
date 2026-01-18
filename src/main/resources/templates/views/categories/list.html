@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories d'Age | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <h1>Categories d'Age</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span>Configuration</span>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+                <p class="badge">Configuration</p>
+                <h2 class="section-title">Vue d'ensemble</h2>
+                <p class="module-description">Categories d'age pour la tarification des passagers</p>
+                <h3 th:text="${categories.size()} + ' categorie(s)'"></h3>
+            </article>
+        </section>
+
+        <section class="table-wrapper">
+            <header>
+                <h2 class="section-title">Categories configurees</h2>
+                <a href="/categories/add" class="btn btn-add">Ajouter</a>
+            </header>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Libelle</th>
+                        <th>Age Min</th>
+                        <th>Age Max</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="cat : ${categories}">
+                        <td th:text="${cat.idCategorie}"></td>
+                        <td><span class="badge" th:text="${cat.libelle}"></span></td>
+                        <td th:text="${cat.ageMin} + ' ans'"></td>
+                        <td th:text="${cat.ageMax} + ' ans'"></td>
+                        <td>
+                            <a th:href="@{/categories/edit/{id}(id=${cat.idCategorie})}" class="btn-edit">Modifier</a>
+                            <a th:href="@{/categories/delete/{id}(id=${cat.idCategorie})}" class="btn-delete" onclick="return confirm('Supprimer cette categorie ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${categories.isEmpty()}">
+                        <td colspan="5" style="text-align:center;color:#999;">Aucune categorie configuree</td>
+                    </tr>
+                    </tbody>
+
+                </table>
+            </div>
+        </section>
+
+        <section class="content-section" style="margin-top:24px;">
+            <div style="background:#e8f4fd;border-left:4px solid #1976d2;padding:16px;border-radius:4px;">
+                <strong>Note:</strong> Les pourcentages de tarif sont maintenant configurés par classe dans la <a href="/remises" style="color:#1976d2;font-weight:bold;">Grille Tarifaire</a>.
+            </div>
+        </section>
+        </section>
+
+        <footer class="main-footer">
+            <span>2026 Compagnie aerienne</span>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

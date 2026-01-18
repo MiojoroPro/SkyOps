@@ -4,17 +4,37 @@
 INSERT INTO classe_siege (code, libelle) VALUES
 ('ECO', 'Economique'),
 ('PRE', 'Premiere'),
-('PRM', 'Premium'),
-('BUS', 'Business');
+('PRM', 'Premium');
 
 -- =========================
 -- CATEGORIE_AGE (categories de passagers)
 -- =========================
 INSERT INTO categorie_age (libelle, age_min, age_max) VALUES
-('Adulte', 18, 64),
+('Adulte', 18, 120),
 ('Enfant', 2, 17),
-('Bebe', 0, 1),
-('Senior', 65, 120);
+('Bebe', 0, 1);
+
+-- =========================
+-- REMISE_CLASSE_CATEGORIE (pourcentage du tarif adulte par classe et categorie)
+-- Exemple: Enfant en Eco = 80%, Enfant en Premiere = 70%
+-- =========================
+-- Economique (id_classe=1)
+INSERT INTO remise_classe_categorie (id_classe, id_categorie, pourcentage) VALUES
+(1, 1, 100.00),  -- Adulte Eco = 100%
+(1, 2, 80.00),   -- Enfant Eco = 80%
+(1, 3, 15.00);   -- Bebe Eco = 15%
+
+-- Premiere (id_classe=2)
+INSERT INTO remise_classe_categorie (id_classe, id_categorie, pourcentage) VALUES
+(2, 1, 100.00),  -- Adulte Premiere = 100%
+(2, 2, 70.00),   -- Enfant Premiere = 70%
+(2, 3, 10.00);   -- Bebe Premiere = 10%
+
+-- Premium (id_classe=3)
+INSERT INTO remise_classe_categorie (id_classe, id_categorie, pourcentage) VALUES
+(3, 1, 100.00),  -- Adulte Premium = 100%
+(3, 2, 60.00),   -- Enfant Premium = 60%
+(3, 3, 5.00);    -- Bebe Premium = 5%
 
 -- =========================
 -- UTILISATEUR
@@ -126,60 +146,61 @@ INSERT INTO vol_classe (id_vol_detail, id_classe, places_restantes) VALUES
 (9, 1, 130), (9, 2, 30), (9, 3, 10);
 
 -- =========================
--- PRIX_CLASSE_AGE (prix par classe et categorie pour chaque vol_detail)
+-- PRIX_CLASSE_AGE (tarif adulte par classe pour chaque vol_detail)
+-- Autres categories = pourcentage du tarif adulte
 -- =========================
 -- Vol MD001 du 20/01 (id_vol_detail=1)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(1, 1, 1, 1200000.00), (1, 1, 2, 900000.00), (1, 1, 3, 120000.00), (1, 1, 4, 1080000.00),
-(1, 2, 1, 2200000.00), (1, 2, 2, 1650000.00), (1, 2, 3, 220000.00), (1, 2, 4, 1980000.00),
-(1, 3, 1, 3500000.00), (1, 3, 2, 2625000.00), (1, 3, 3, 350000.00), (1, 3, 4, 3150000.00);
+(1, 1, 1, 1200000.00),
+(1, 2, 1, 2200000.00),
+(1, 3, 1, 3500000.00);
 
 -- Vol MD001 du 21/01 (id_vol_detail=2)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(2, 1, 1, 1200000.00), (2, 1, 2, 900000.00), (2, 1, 3, 120000.00), (2, 1, 4, 1080000.00),
-(2, 2, 1, 2200000.00), (2, 2, 2, 1650000.00), (2, 2, 3, 220000.00), (2, 2, 4, 1980000.00),
-(2, 3, 1, 3500000.00), (2, 3, 2, 2625000.00), (2, 3, 3, 350000.00), (2, 3, 4, 3150000.00);
+(2, 1, 1, 1200000.00),
+(2, 2, 1, 2200000.00),
+(2, 3, 1, 3500000.00);
 
 -- Vol MD001 du 22/01 soir (id_vol_detail=3)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(3, 1, 1, 1250000.00), (3, 1, 2, 937500.00), (3, 1, 3, 125000.00), (3, 1, 4, 1125000.00),
-(3, 2, 1, 2300000.00), (3, 2, 2, 1725000.00), (3, 2, 3, 230000.00), (3, 2, 4, 2070000.00),
-(3, 3, 1, 3600000.00), (3, 3, 2, 2700000.00), (3, 3, 3, 360000.00), (3, 3, 4, 3240000.00);
+(3, 1, 1, 1250000.00),
+(3, 2, 1, 2300000.00),
+(3, 3, 1, 3600000.00);
 
 -- Vol MD002 du 20/01 (id_vol_detail=4)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(4, 1, 1, 600000.00), (4, 1, 2, 450000.00), (4, 1, 3, 60000.00), (4, 1, 4, 540000.00),
-(4, 2, 1, 1200000.00), (4, 2, 2, 900000.00), (4, 2, 3, 120000.00), (4, 2, 4, 1080000.00),
-(4, 3, 1, 1800000.00), (4, 3, 2, 1350000.00), (4, 3, 3, 180000.00), (4, 3, 4, 1620000.00);
+(4, 1, 1, 600000.00),
+(4, 2, 1, 1200000.00),
+(4, 3, 1, 1800000.00);
 
 -- Vol MD002 du 21/01 (id_vol_detail=5)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(5, 1, 1, 600000.00), (5, 1, 2, 450000.00), (5, 1, 3, 60000.00), (5, 1, 4, 540000.00),
-(5, 2, 1, 1200000.00), (5, 2, 2, 900000.00), (5, 2, 3, 120000.00), (5, 2, 4, 1080000.00),
-(5, 3, 1, 1800000.00), (5, 3, 2, 1350000.00), (5, 3, 3, 180000.00), (5, 3, 4, 1620000.00);
+(5, 1, 1, 600000.00),
+(5, 2, 1, 1200000.00),
+(5, 3, 1, 1800000.00);
 
 -- Vol MD003 du 20/01 (id_vol_detail=6)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(6, 1, 1, 350000.00), (6, 1, 2, 262500.00), (6, 1, 3, 35000.00), (6, 1, 4, 315000.00),
-(6, 2, 1, 700000.00), (6, 2, 2, 525000.00), (6, 2, 3, 70000.00), (6, 2, 4, 630000.00);
+(6, 1, 1, 350000.00),
+(6, 2, 1, 700000.00);
 
 -- Vol MD003 du 21/01 (id_vol_detail=7)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(7, 1, 1, 350000.00), (7, 1, 2, 262500.00), (7, 1, 3, 35000.00), (7, 1, 4, 315000.00),
-(7, 2, 1, 700000.00), (7, 2, 2, 525000.00), (7, 2, 3, 70000.00), (7, 2, 4, 630000.00);
+(7, 1, 1, 350000.00),
+(7, 2, 1, 700000.00);
 
 -- Vol AF101 du 22/01 (id_vol_detail=8)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(8, 1, 1, 1300000.00), (8, 1, 2, 975000.00), (8, 1, 3, 130000.00), (8, 1, 4, 1170000.00),
-(8, 2, 1, 2500000.00), (8, 2, 2, 1875000.00), (8, 2, 3, 250000.00), (8, 2, 4, 2250000.00),
-(8, 3, 1, 4000000.00), (8, 3, 2, 3000000.00), (8, 3, 3, 400000.00), (8, 3, 4, 3600000.00),
-(8, 4, 1, 6000000.00), (8, 4, 2, 4500000.00), (8, 4, 3, 600000.00), (8, 4, 4, 5400000.00);
+(8, 1, 1, 1300000.00),
+(8, 2, 1, 2500000.00),
+(8, 3, 1, 4000000.00),
+(8, 4, 1, 6000000.00);
 
 -- Vol MK501 du 23/01 (id_vol_detail=9)
 INSERT INTO prix_classe_age (id_vol_detail, id_classe, id_categorie, prix) VALUES
-(9, 1, 1, 650000.00), (9, 1, 2, 487500.00), (9, 1, 3, 65000.00), (9, 1, 4, 585000.00),
-(9, 2, 1, 1300000.00), (9, 2, 2, 975000.00), (9, 2, 3, 130000.00), (9, 2, 4, 1170000.00),
-(9, 3, 1, 2000000.00), (9, 3, 2, 1500000.00), (9, 3, 3, 200000.00), (9, 3, 4, 1800000.00);
+(9, 1, 1, 650000.00),
+(9, 2, 1, 1300000.00),
+(9, 3, 1, 2000000.00);
 
 -- =========================
 -- RESERVATION (avec FK vers classe_siege et categorie_age)
@@ -189,7 +210,7 @@ INSERT INTO reservation (date_reservation, numero_reservation, statut, id_utilis
 (CURRENT_TIMESTAMP, 'RES-002', 'CONFIRMEE', 2, 1, 1, 2),
 (CURRENT_TIMESTAMP, 'RES-003', 'EN_ATTENTE', 3, 1, 2, 1),
 (CURRENT_TIMESTAMP, 'RES-004', 'CONFIRMEE', 4, 4, 1, 1),
-(CURRENT_TIMESTAMP, 'RES-005', 'EN_ATTENTE', 5, 8, 3, 4);
+(CURRENT_TIMESTAMP, 'RES-005', 'EN_ATTENTE', 5, 8, 3, 1);
 
 -- =========================
 -- PAIEMENT
@@ -199,4 +220,9 @@ INSERT INTO paiement (date_paiement, montant, statut, id_reservation) VALUES
 (CURRENT_TIMESTAMP, 900000.00, 'PAYE', 2),
 (NULL, 2200000.00, 'NON_PAYE', 3),
 (CURRENT_TIMESTAMP, 600000.00, 'PAYE', 4),
-(NULL, 3600000.00, 'NON_PAYE', 5);
+(NULL, 4000000.00, 'NON_PAYE', 5);
+
+
+UPDATE prix_classe_age 
+SET prix = 1500000.00 
+WHERE id_classe = 1 AND id_categorie = 1;

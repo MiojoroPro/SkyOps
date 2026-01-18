@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiffre d'affaires | Compagnie aerienne</title>
+    <title>CA Previsionnel | Compagnie aerienne</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <style>
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -25,16 +25,18 @@
             text-transform: uppercase;
         }
         .stat-card .value {
-            font-size: 1.8em;
+            font-size: 1.6em;
             font-weight: bold;
             color: #1565c0;
         }
         .stat-card.success .value { color: #4caf50; }
         .stat-card.info .value { color: #2196f3; }
         .stat-card.warning .value { color: #ff9800; }
+        .stat-card.danger .value { color: #f44336; }
+        .stat-card.primary .value { color: #673ab7; }
         .filter-form {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 12px;
             padding: 16px 24px;
         }
@@ -76,6 +78,17 @@
             background: #1565c0;
             color: #fff;
         }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #e65100; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .badge-info { background: #e3f2fd; color: #1565c0; }
     </style>
 </head>
 <body>
@@ -85,31 +98,43 @@
         <div class="main-header">
             <div>
                 <p class="eyebrow">Rapports</p>
-                <h1>Chiffre d'Affaires</h1>
-                <p class="module-description">Analysez les revenus par vol, avion, compagnie ou client.</p>
+                <h1>CA Previsionnel</h1>
+                <p class="module-description">Analysez les revenus bases sur toutes les reservations (payees ou non).</p>
             </div>
         </div>
 
         <!-- Onglets -->
         <div class="page-tabs">
-            <a th:href="@{/chiffre-affaire}" class="active">CA Reel (Paye)</a>
-            <a th:href="@{/chiffre-affaire/previsionnel}">CA Previsionnel (Reservations)</a>
+            <a th:href="@{/chiffre-affaire}">CA Reel (Paye)</a>
+            <a th:href="@{/chiffre-affaire/previsionnel}" class="active">CA Previsionnel (Reservations)</a>
         </div>
 
         <!-- Statistiques -->
         <section class="content-section">
             <div class="stats-grid">
-                <div class="stat-card success">
-                    <h4>Total CA</h4>
-                    <div class="value" th:text="${#numbers.formatDecimal(total,0,0)} + ' MGA'">0 MGA</div>
+                <div class="stat-card primary">
+                    <h4>CA Previsionnel</h4>
+                    <div class="value" th:text="${#numbers.formatDecimal(totalPrevisionnel,0,0)} + ' MGA'">0 MGA</div>
                 </div>
-                <div class="stat-card info">
-                    <h4>Nb Paiements</h4>
-                    <div class="value" th:text="${nbPaiements}">0</div>
+                <div class="stat-card success">
+                    <h4>Deja Paye</h4>
+                    <div class="value" th:text="${#numbers.formatDecimal(totalPaye,0,0)} + ' MGA'">0 MGA</div>
                 </div>
                 <div class="stat-card warning">
-                    <h4>Moyenne / Paiement</h4>
-                    <div class="value" th:text="${#numbers.formatDecimal(moyenne,0,0)} + ' MGA'">0 MGA</div>
+                    <h4>En Attente</h4>
+                    <div class="value" th:text="${#numbers.formatDecimal(totalNonPaye,0,0)} + ' MGA'">0 MGA</div>
+                </div>
+                <div class="stat-card info">
+                    <h4>Nb Reservations</h4>
+                    <div class="value" th:text="${nbReservations}">0</div>
+                </div>
+                <div class="stat-card success">
+                    <h4>Payees</h4>
+                    <div class="value" th:text="${nbPayees}">0</div>
+                </div>
+                <div class="stat-card danger">
+                    <h4>Non Payees</h4>
+                    <div class="value" th:text="${nbNonPayees}">0</div>
                 </div>
             </div>
         </section>
@@ -123,7 +148,7 @@
                 </div>
             </header>
 
-            <form th:action="@{/chiffre-affaire}" method="get" class="filter-form">
+            <form th:action="@{/chiffre-affaire/previsionnel}" method="get" class="filter-form">
                 <div class="form-group">
                     <label>Compagnie</label>
                     <select name="compagnieId">
@@ -153,6 +178,15 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Statut reservation</label>
+                    <select name="statut">
+                        <option value="" th:selected="${selectedStatut == null or selectedStatut == ''}">Tous</option>
+                        <option value="EN_ATTENTE" th:selected="${selectedStatut == 'EN_ATTENTE'}">En attente</option>
+                        <option value="CONFIRMEE" th:selected="${selectedStatut == 'CONFIRMEE'}">Confirmee</option>
+                        <option value="ANNULE" th:selected="${selectedStatut == 'ANNULE'}">Annulee</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Date debut</label>
                     <input type="date" name="startDate" th:value="${startDate}" />
                 </div>
@@ -162,15 +196,15 @@
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-apply">Appliquer</button>
-                    <a href="/chiffre-affaire" class="btn btn-secondary">Reset</a>
+                    <a href="/chiffre-affaire/previsionnel" class="btn btn-secondary">Reset</a>
                 </div>
             </form>
         </div>
 
-        <!-- Tableau des paiements -->
+        <!-- Tableau des reservations -->
         <div class="table-wrapper" style="margin-top: 20px;">
             <header>
-                <h3 class="section-title">Details des paiements</h3>
+                <h3 class="section-title">Details des reservations</h3>
             </header>
 
             <div class="table-responsive" style="padding: 0 24px 24px;">
@@ -178,28 +212,42 @@
                     <thead>
                     <tr>
                         <th>Date</th>
-                        <th>Reservation</th>
+                        <th>Numero</th>
                         <th>Vol</th>
                         <th>Avion</th>
                         <th>Compagnie</th>
                         <th>Client</th>
                         <th>Classe</th>
-                        <th>Montant</th>
+                        <th>Categorie</th>
+                        <th>Statut</th>
+                        <th>Paiement</th>
+                        <th>Prix</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="p : ${paiements}">
-                        <td th:text="${p.datePaiement != null ? #temporals.format(p.datePaiement, 'dd/MM/yyyy HH:mm') : '-'}"></td>
-                        <td th:text="${p.reservation != null ? p.reservation.numeroReservation : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.vol != null ? p.reservation.volDetail.vol.numeroVol : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.avion != null ? p.reservation.volDetail.avion.modele : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.vol != null and p.reservation.volDetail.vol.compagnie != null ? p.reservation.volDetail.vol.compagnie.nom : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.utilisateur != null ? p.reservation.utilisateur.nom + ' ' + p.reservation.utilisateur.prenom : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.classeSiege != null ? p.reservation.classeSiege.libelle : '-'}"></td>
-                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatDecimal(p.montant,0,0)} + ' MGA'"></td>
+                    <tr th:each="r : ${reservations}">
+                        <td th:text="${r.dateReservation != null ? #temporals.format(r.dateReservation, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                        <td th:text="${r.numeroReservation}"></td>
+                        <td th:text="${r.volDetail != null and r.volDetail.vol != null ? r.volDetail.vol.numeroVol : '-'}"></td>
+                        <td th:text="${r.volDetail != null and r.volDetail.avion != null ? r.volDetail.avion.modele : '-'}"></td>
+                        <td th:text="${r.volDetail != null and r.volDetail.vol != null and r.volDetail.vol.compagnie != null ? r.volDetail.vol.compagnie.nom : '-'}"></td>
+                        <td th:text="${r.utilisateur != null ? r.utilisateur.nom + ' ' + r.utilisateur.prenom : '-'}"></td>
+                        <td th:text="${r.classeSiege != null ? r.classeSiege.libelle : '-'}"></td>
+                        <td th:text="${r.categorieAge != null ? r.categorieAge.libelle : '-'}"></td>
+                        <td>
+                            <span th:if="${r.statut == 'CONFIRMEE'}" class="badge badge-success" th:text="${r.statut}"></span>
+                            <span th:if="${r.statut == 'EN_ATTENTE'}" class="badge badge-warning" th:text="${r.statut}"></span>
+                            <span th:if="${r.statut == 'ANNULE'}" class="badge badge-danger" th:text="${r.statut}"></span>
+                            <span th:if="${r.statut != 'CONFIRMEE' and r.statut != 'EN_ATTENTE' and r.statut != 'ANNULE'}" class="badge badge-info" th:text="${r.statut}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${r.paiement != null and r.paiement.statut == 'PAYE'}" class="badge badge-success">PAYE</span>
+                            <span th:if="${r.paiement == null or r.paiement.statut != 'PAYE'}" class="badge badge-warning">NON PAYE</span>
+                        </td>
+                        <td style="font-weight:bold;color:#673ab7" th:with="prix=${@reservationService.getPrix(r)}" th:text="${#numbers.formatDecimal(prix,0,0)} + ' MGA'"></td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(paiements)}">
-                        <td colspan="8" style="text-align:center;padding:20px;color:#999;">Aucun paiement trouve pour ces criteres.</td>
+                    <tr th:if="${#lists.isEmpty(reservations)}">
+                        <td colspan="11" style="text-align:center;padding:20px;color:#999;">Aucune reservation trouvee pour ces criteres.</td>
                     </tr>
                     </tbody>
                 </table>

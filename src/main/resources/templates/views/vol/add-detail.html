@@ -84,31 +84,46 @@
                         </div>
                     </div>
 
-                    <!-- Prix par classe et catégorie d'âge -->
+<!-- Prix par classe (tarif adulte de base) -->
                     <div class="price-matrix">
-                        <h3>Prix par classe et catégorie d'âge</h3>
-                        <p style="color: #666; margin-bottom: 15px;">Définissez les prix en MGA pour chaque combinaison classe/catégorie</p>
+                        <h3>Tarif adulte par classe</h3>
+                        <p style="color: #666; margin-bottom: 15px;">Définissez le tarif adulte (base) pour chaque classe. Les prix enfant/bébé seront calculés automatiquement selon les pourcentages configurés.</p>
                         
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Classe / Catégorie</th>
-                                    <th th:each="categorie : ${categories}" th:text="${categorie.libelle}">Catégorie</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="classe : ${classes}">
-                                    <th th:text="${classe.libelle}">Classe</th>
-                                    <td th:each="categorie : ${categories}">
-                                        <input type="number" 
-                                               th:name="'prix_' + ${classe.idClasse} + '_' + ${categorie.idCategorie}" 
-                                               min="0" 
-                                               step="0.01"
-                                               placeholder="Prix MGA" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="places-grid">
+                            <div th:each="classe : ${classes}" class="place-item">
+                                <label th:text="${classe.libelle} + ' (MGA)'">Classe</label>
+                                <input type="number" 
+                                       th:name="'prix_adulte_' + ${classe.idClasse}" 
+                                       min="0" 
+                                       step="0.01"
+                                       placeholder="Tarif adulte" />
+                            </div>
+                        </div>
+                        
+                        <!-- Afficher la grille des remises par classe -->
+                        <div style="margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px;">
+                            <strong>Pourcentages appliqués par classe :</strong>
+                            <table style="width:100%; margin-top:10px; border-collapse:collapse; font-size:0.9em;">
+                                <thead>
+                                    <tr style="background:#e3f2fd;">
+                                        <th style="padding:8px; border:1px solid #ddd;">Catégorie</th>
+                                        <th th:each="classe : ${classes}" style="padding:8px; border:1px solid #ddd;" th:text="${classe.libelle}"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cat : ${categories}">
+                                        <td style="padding:8px; border:1px solid #ddd; font-weight:500;" th:text="${cat.libelle}"></td>
+                                        <td th:each="classe : ${classes}" style="padding:8px; border:1px solid #ddd; text-align:center;">
+                                            <span th:classappend="${matriceRemises[classe.idClasse][cat.idCategorie] >= 100} ? 'color:#4caf50;font-weight:bold' : 'color:#ff9800'"
+                                                  th:text="${#numbers.formatDecimal(matriceRemises[classe.idClasse][cat.idCategorie], 1, 0)} + '%'"></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <small style="color:#666; display:block; margin-top:8px;">
+                                <a href="/remises" style="color:#1976d2;">Modifier la grille tarifaire</a>
+                            </small>
+                        </div>
                     </div>
 
                     <div class="form-actions" style="margin-top: 30px;">

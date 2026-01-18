@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier Categorie | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <h1>Modifier la categorie d'age</h1>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+
+                <form th:action="@{/categories/edit/{id}(id=${categorie.idCategorie})}" th:object="${categorie}" method="post">
+
+                    <div class="form-group">
+                        <label>Libelle</label>
+                        <input type="text" th:field="*{libelle}" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Age minimum</label>
+                        <input type="number" th:field="*{ageMin}" min="0" max="120" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Age maximum</label>
+                        <input type="number" th:field="*{ageMax}" min="0" max="120" required />
+                    </div>
+
+                    <div style="background:#e8f4fd;border-left:4px solid #1976d2;padding:12px;border-radius:4px;margin-bottom:16px;">
+                        <small><strong>Note:</strong> Les pourcentages de tarif sont configurés par classe dans la <a href="/remises" style="color:#1976d2;">Grille Tarifaire</a>.</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-save">Modifier</button>
+                        <a href="/categories" class="btn btn-secondary">Annuler</a>
+                    </div>
+
+                </form>
+
+            </article>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

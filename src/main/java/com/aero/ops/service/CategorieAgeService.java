@@ -28,6 +28,21 @@ public class CategorieAgeService {
         return categorieAgeRepository.findByAge(age);
     }
 
+    /**
+     * Retourne la catégorie "Adulte" (basée sur le libellé ou l'âge min >= 18).
+     * C'est la catégorie de référence pour le tarif de base.
+     */
+    public CategorieAge getCategorieAdulte() {
+        return categorieAgeRepository.findAll().stream()
+                .filter(c -> c.getLibelle() != null 
+                        && c.getLibelle().toLowerCase().contains("adulte"))
+                .findFirst()
+                .orElseGet(() -> categorieAgeRepository.findAll().stream()
+                        .filter(c -> c.getAgeMin() != null && c.getAgeMin() >= 18)
+                        .findFirst()
+                        .orElse(null));
+    }
+
     public CategorieAge create(CategorieAge categorieAge) {
         return categorieAgeRepository.save(categorieAge);
     }

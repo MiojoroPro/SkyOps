@@ -18,7 +18,14 @@
         <a class="menu-link" href="/reservations"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/reservations')} ? ' is-active' : ''">Reservations</a>
         <a class="menu-link" href="/chiffre-affaire"
-           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/chiffre-affaire')} ? ' is-active' : ''">Chiffre d'Affaires</a>
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/chiffre-affaire')} ? ' is-active' : ''">CA</a>
+        <hr style="border:none;border-top:1px solid #444;margin:10px 0;" />
+        <a class="menu-link" href="/classes"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/classes')} ? ' is-active' : ''">Classes Siege</a>
+        <a class="menu-link" href="/categories"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/categories')} ? ' is-active' : ''">Categories Age</a>
+        <a class="menu-link" href="/remises"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/remises')} ? ' is-active' : ''">Grille Tarifaire</a>
         <a class="menu-link logout" href="/logout">Deconnexion</a>
     </nav>
 </aside>

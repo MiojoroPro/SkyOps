@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationService {
@@ -38,6 +40,31 @@ public class ReservationService {
 
     public Reservation getById(Long id) {
         return reservationRepository.findById(id).orElse(null);
+    }
+
+    /**
+     * Recherche les réservations avec filtres multiples.
+     */
+    public List<Reservation> findByFilters(Long volId, Long userId, Long avionId, Long compagnieId, 
+                                           String statut, LocalDate startDate, LocalDate endDate) {
+        List<Reservation> all = reservationRepository.findAll();
+        
+        return all.stream()
+                .filter(r -> volId == null || (r.getVolDetail() != null && r.getVolDetail().getVol() != null 
+                        && r.getVolDetail().getVol().getIdVol().equals(volId)))
+                .filter(r -> userId == null || (r.getUtilisateur() != null 
+                        && r.getUtilisateur().getIdUtilisateur().equals(userId)))
+                .filter(r -> avionId == null || (r.getVolDetail() != null && r.getVolDetail().getAvion() != null 
+                        && r.getVolDetail().getAvion().getIdAvion().equals(avionId)))
+                .filter(r -> compagnieId == null || (r.getVolDetail() != null && r.getVolDetail().getVol() != null 
+                        && r.getVolDetail().getVol().getCompagnie() != null 
+                        && r.getVolDetail().getVol().getCompagnie().getIdCompagnie().equals(compagnieId)))
+                .filter(r -> statut == null || statut.isEmpty() || statut.equals(r.getStatut()))
+                .filter(r -> startDate == null || (r.getDateReservation() != null 
+                        && !r.getDateReservation().toLocalDate().isBefore(startDate)))
+                .filter(r -> endDate == null || (r.getDateReservation() != null 
+                        && !r.getDateReservation().toLocalDate().isAfter(endDate)))
+                .collect(Collectors.toList());
     }
 
     /**
