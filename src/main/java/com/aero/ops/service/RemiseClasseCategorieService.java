@@ -50,7 +50,6 @@ public class RemiseClasseCategorieService {
                 .orElseThrow(() -> new RuntimeException("Catégorie non trouvée"));
 
         RemiseClasseCategorie remise = new RemiseClasseCategorie();
-        remise.setId(new RemiseClasseCategorieId(idClasse, idCategorie));
         remise.setClasseSiege(classe);
         remise.setCategorieAge(categorie);
         remise.setPourcentage(pourcentage);
@@ -64,20 +63,23 @@ public class RemiseClasseCategorieService {
 
     /**
      * Obtient le pourcentage de remise pour une classe et catégorie
-     * Retourne 100 par défaut si non défini
+     * Retourne 0 par défaut (pas de remise) si non défini
      */
     public BigDecimal getPourcentage(Long idClasse, Long idCategorie) {
         return findByClasseAndCategorie(idClasse, idCategorie)
                 .map(RemiseClasseCategorie::getPourcentage)
-                .orElse(BigDecimal.valueOf(100));
+                .orElse(BigDecimal.ZERO);
     }
 
     /**
-     * Calcule le prix pour une classe et catégorie à partir du prix adulte
+     * Calcule le prix avec remise appliquée pour une classe et catégorie
+     * La remise est un pourcentage de réduction: prix final = prixBase * (100 - remise) / 100
      */
-    public BigDecimal calculerPrix(BigDecimal prixAdulte, Long idClasse, Long idCategorie) {
-        BigDecimal pourcentage = getPourcentage(idClasse, idCategorie);
-        return prixAdulte.multiply(pourcentage).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    public BigDecimal calculerPrixAvecRemise(BigDecimal prixBase, Long idClasse, Long idCategorie) {
+        BigDecimal pourcentageRemise = getPourcentage(idClasse, idCategorie);
+        // prixFinal = prixBase * (100 - pourcentageRemise) / 100
+        BigDecimal facteur = BigDecimal.valueOf(100).subtract(pourcentageRemise);
+        return prixBase.multiply(facteur).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
 
     /**

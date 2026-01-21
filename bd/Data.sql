@@ -10,8 +10,8 @@ INSERT INTO classe_siege (code, libelle) VALUES
 -- CATEGORIE_AGE (categories de passagers)
 -- =========================
 INSERT INTO categorie_age (libelle, age_min, age_max) VALUES
-('Adulte', 18, 120),
-('Enfant', 2, 17),
+('Adulte', 13, 120),
+('Enfant', 2, 12),
 ('Bebe', 0, 1);
 
 -- =========================

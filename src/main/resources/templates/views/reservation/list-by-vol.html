@@ -9,7 +9,7 @@
 <body>
 
 <div class="app-shell">
-    <div th:replace="ui/menu :: menu"></div>
+    <div th:replace="~{ui/menu :: menu}"></div>
 
     <main class="main-area">
         <header class="main-header">
@@ -30,9 +30,13 @@
                         <th>ID</th>
                         <th>Numéro</th>
                         <th>Client</th>
-                        <th>Exécution</th>
+                        <th>Classe</th>
+                        <th>Catégorie</th>
+                        <th>Départ</th>
                         <th>Date réservation</th>
                         <th>Statut</th>
+                        <th>Paiement</th>
+                        <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -40,7 +44,8 @@
                         <td th:text="${r.idReservation}"></td>
                         <td th:text="${r.numeroReservation}"></td>
                         <td th:text="${r.utilisateur != null ? r.utilisateur.nom + ' ' + r.utilisateur.prenom : ''}"></td>
-                        <td th:text="${r.classe}"></td>
+                        <td th:text="${r.classeSiege != null ? r.classeSiege.libelle : ''}"></td>
+                        <td th:text="${r.categorieAge != null ? r.categorieAge.libelle : ''}"></td>
                         <td th:text="${r.volDetail != null ? #temporals.format(r.volDetail.dateHeureDepart,'yyyy-MM-dd HH:mm') : ''}"></td>
                         <td th:text="${#temporals.format(r.dateReservation,'yyyy-MM-dd HH:mm')}"></td>
                         <td th:text="${r.statut}"></td>

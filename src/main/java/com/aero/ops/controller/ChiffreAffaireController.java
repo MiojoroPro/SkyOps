@@ -98,7 +98,7 @@ public class ChiffreAffaireController {
         BigDecimal totalNonPaye = BigDecimal.ZERO;
         
         for (Reservation r : reservations) {
-            BigDecimal prix = reservationService.getPrix(r);
+            BigDecimal prix = reservationService.getPrixFinal(r);
             totalPrevisionnel = totalPrevisionnel.add(prix);
             
             if (r.getPaiement() != null && "PAYE".equals(r.getPaiement().getStatut())) {

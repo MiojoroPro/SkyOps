@@ -9,37 +9,35 @@ import java.math.RoundingMode;
 
 @Entity
 @Table(name = "remise_classe_categorie")
+@IdClass(RemiseClasseCategorieId.class)
 @Getter
 @Setter
 public class RemiseClasseCategorie {
 
-    @EmbeddedId
-    private RemiseClasseCategorieId id;
-
+    @Id
     @ManyToOne
-    @MapsId("idClasse")
     @JoinColumn(name = "id_classe")
     private ClasseSiege classeSiege;
 
+    @Id
     @ManyToOne
-    @MapsId("idCategorie")
     @JoinColumn(name = "id_categorie")
     private CategorieAge categorieAge;
 
     /**
-     * Pourcentage du tarif adulte pour cette classe et catégorie
-     * Ex: 100 pour adulte, 75 pour enfant en éco, 60 pour enfant en première
+     * Pourcentage de réduction pour cette classe et catégorie
+     * Entre 0 et 100 (valeur en pourcentage)
      */
     @Column(name = "pourcentage", nullable = false)
-    private BigDecimal pourcentage = BigDecimal.valueOf(100);
+    private BigDecimal pourcentage = BigDecimal.ZERO;
 
     /**
-     * Calcule le prix pour cette combinaison classe/catégorie à partir du prix adulte
+     * Calcule le prix final avec la remise appliquée
      */
-    public BigDecimal calculerPrix(BigDecimal prixAdulte) {
-        if (prixAdulte == null || pourcentage == null) {
-            return BigDecimal.ZERO;
+    public BigDecimal appliquerRemise(BigDecimal prixBase) {
+        if (prixBase == null || pourcentage == null) {
+            return prixBase;
         }
-        return prixAdulte.multiply(pourcentage).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        return prixBase.multiply(BigDecimal.ONE.subtract(pourcentage.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)));
     }
 }

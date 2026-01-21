@@ -67,27 +67,10 @@
                         </select>
                     </div>
 
-                    <!-- Places par classe -->
-                    <div class="places-section">
-                        <h3>Places disponibles par classe</h3>
-                        <p style="color: #666; margin-bottom: 15px;">Définissez le nombre de places pour chaque classe de siège</p>
-                        
-                        <div class="places-grid">
-                            <div th:each="classe : ${classes}" class="place-item">
-                                <label th:text="${classe.libelle}">Classe</label>
-                                <input type="number" 
-                                       th:name="'places_' + ${classe.idClasse}" 
-                                       min="0" 
-                                       value="0" 
-                                       placeholder="Nombre de places" />
-                            </div>
-                        </div>
-                    </div>
-
-<!-- Prix par classe (tarif adulte de base) -->
+<!-- Prix par classe (tarif par défaut) -->
                     <div class="price-matrix">
-                        <h3>Tarif adulte par classe</h3>
-                        <p style="color: #666; margin-bottom: 15px;">Définissez le tarif adulte (base) pour chaque classe. Les prix enfant/bébé seront calculés automatiquement selon les pourcentages configurés.</p>
+                        <h3>Tarif par défaut par classe</h3>
+                        <p style="color: #666; margin-bottom: 15px;">Définissez le tarif par défaut pour chaque classe. Les prix avec remise seront calculés automatiquement selon les remises configurées.</p>
                         
                         <div class="places-grid">
                             <div th:each="classe : ${classes}" class="place-item">
@@ -96,13 +79,14 @@
                                        th:name="'prix_adulte_' + ${classe.idClasse}" 
                                        min="0" 
                                        step="0.01"
-                                       placeholder="Tarif adulte" />
+                                       required
+                                       placeholder="Tarif par défaut" />
                             </div>
                         </div>
                         
-                        <!-- Afficher la grille des remises par classe -->
+                        <!-- Afficher la grille des remises par défaut -->
                         <div style="margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px;">
-                            <strong>Pourcentages appliqués par classe :</strong>
+                            <strong>Remises disponibles par classe et catégorie :</strong>
                             <table style="width:100%; margin-top:10px; border-collapse:collapse; font-size:0.9em;">
                                 <thead>
                                     <tr style="background:#e3f2fd;">
@@ -114,15 +98,59 @@
                                     <tr th:each="cat : ${categories}">
                                         <td style="padding:8px; border:1px solid #ddd; font-weight:500;" th:text="${cat.libelle}"></td>
                                         <td th:each="classe : ${classes}" style="padding:8px; border:1px solid #ddd; text-align:center;">
-                                            <span th:classappend="${matriceRemises[classe.idClasse][cat.idCategorie] >= 100} ? 'color:#4caf50;font-weight:bold' : 'color:#ff9800'"
-                                                  th:text="${#numbers.formatDecimal(matriceRemises[classe.idClasse][cat.idCategorie], 1, 0)} + '%'"></span>
+                                            <span th:classappend="${matriceRemises[classe.idClasse][cat.idCategorie] > 0} ? 'color:#4caf50;font-weight:bold' : 'color:#999'"
+                                                  th:text="${matriceRemises[classe.idClasse][cat.idCategorie] > 0} ? (${#numbers.formatDecimal(matriceRemises[classe.idClasse][cat.idCategorie], 1, 0)} + '%') : 'Aucune'"></span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                             <small style="color:#666; display:block; margin-top:8px;">
-                                <a href="/remises" style="color:#1976d2;">Modifier la grille tarifaire</a>
+                                <a href="/remises" style="color:#1976d2;">Gérer les remises</a>
                             </small>
+                        </div>
+                    </div>
+
+                    <!-- Section optionnelle : Remises supplémentaires par classe et catégorie -->
+                    <div style="margin-top: 30px;">
+                        <div style="padding: 15px; background: #fff3e0; border-radius: 8px;">
+                            <label style="display:flex; align-items:center; cursor:pointer; font-weight:bold;">
+                                <input type="checkbox" 
+                                       id="applyRemisesCheckbox" 
+                                       onchange="document.getElementById('remisesSection').style.display = this.checked ? 'block' : 'none'" 
+                                       style="margin-right: 10px; cursor:pointer;" />
+                                Appliquer des remises supplémentaires pour cette exécution
+                            </label>
+                            <small style="color:#666; display:block; margin-top:5px;">
+                                Si vous activez cette option, vous pourrez définir des remises supplémentaires pour certaines classes et catégories d'âge.
+                            </small>
+                        </div>
+
+                        <div id="remisesSection" style="display:none; margin-top:20px; padding:20px; background:#f9f9f9; border:1px solid #ddd; border-radius:8px;">
+                            <h3>Remises supplémentaires (en %)</h3>
+                            <p style="color:#666; margin-bottom:15px;">Définissez les remises optionnelles. Laissez vide pour appliquer les remises par défaut, ou entrez 0 pour aucune remise.</p>
+                            
+                            <table style="width:100%; border-collapse:collapse;">
+                                <thead>
+                                    <tr style="background:#f0f0f0;">
+                                        <th style="padding:10px; border:1px solid #ddd; text-align:left;">Catégorie</th>
+                                        <th th:each="classe : ${classes}" style="padding:10px; border:1px solid #ddd; text-align:center;" th:text="${classe.libelle}"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cat : ${categories}">
+                                        <td style="padding:10px; border:1px solid #ddd; font-weight:500;" th:text="${cat.libelle}"></td>
+                                        <td th:each="classe : ${classes}" style="padding:10px; border:1px solid #ddd; text-align:center;">
+                                            <input type="number" 
+                                                   th:name="'remise_' + ${classe.idClasse} + '_' + ${cat.idCategorie}" 
+                                                   min="0" 
+                                                   max="100" 
+                                                   step="0.01"
+                                                   style="width:100px; padding:5px; text-align:center;" 
+                                                   placeholder="%" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 

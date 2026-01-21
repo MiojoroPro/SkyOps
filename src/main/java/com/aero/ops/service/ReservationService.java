@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,15 +14,12 @@ import java.util.stream.Collectors;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final VolClasseService volClasseService;
-    private final PrixClasseAgeService prixClasseAgeService;
+    private final VolDetailService volDetailService;
 
     public ReservationService(ReservationRepository reservationRepository,
-                              VolClasseService volClasseService,
-                              PrixClasseAgeService prixClasseAgeService) {
+                              VolDetailService volDetailService) {
         this.reservationRepository = reservationRepository;
-        this.volClasseService = volClasseService;
-        this.prixClasseAgeService = prixClasseAgeService;
+        this.volDetailService = volDetailService;
     }
 
     public List<Reservation> getAll() {
@@ -60,69 +56,82 @@ public class ReservationService {
                         && r.getVolDetail().getVol().getCompagnie() != null 
                         && r.getVolDetail().getVol().getCompagnie().getIdCompagnie().equals(compagnieId)))
                 .filter(r -> statut == null || statut.isEmpty() || statut.equals(r.getStatut()))
-                .filter(r -> startDate == null || (r.getDateReservation() != null 
-                        && !r.getDateReservation().toLocalDate().isBefore(startDate)))
-                .filter(r -> endDate == null || (r.getDateReservation() != null 
-                        && !r.getDateReservation().toLocalDate().isAfter(endDate)))
+                .filter(r -> startDate == null || (r.getVolDetail() != null && r.getVolDetail().getDateHeureDepart() != null 
+                        && !r.getVolDetail().getDateHeureDepart().toLocalDate().isBefore(startDate)))
+                .filter(r -> endDate == null || (r.getVolDetail() != null && r.getVolDetail().getDateHeureDepart() != null 
+                        && !r.getVolDetail().getDateHeureDepart().toLocalDate().isAfter(endDate)))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Crée une nouvelle réservation avec vérification et décrémentation des places.
+     * Crée une nouvelle réservation avec vérification des places.
      * 
      * Règles métier:
-     * 1. Vérifier que places_restantes > 0 pour la classe choisie
-     * 2. Décrémenter les places après validation
-     * 3. Le prix est récupéré depuis prix_classe_age
+     * 1. Vérifier que des places sont disponibles pour la classe choisie
+     * 2. Les places restantes sont calculées dynamiquement: Capacité - Nombre de réservations
+     * 3. Le prix final est calculé à partir du prix de base avec remise appliquée
      */
     @Transactional
     public Reservation create(Reservation reservation) {
         validateReservation(reservation);
         
-        reservation.setDateReservation(LocalDateTime.now());
-        if (reservation.getStatut() == null) {
-            reservation.setStatut("EN_ATTENTE");
+        if (reservation.getVolDetail() == null || reservation.getVolDetail().getIdVolDetail() == null) {
+            throw new IllegalArgumentException("Le vol est obligatoire.");
+        }
+        
+        if (reservation.getClasseSiege() == null || reservation.getClasseSiege().getIdClasse() == null) {
+            throw new IllegalArgumentException("La classe de siège est obligatoire.");
         }
 
-        Long idVolDetail = reservation.getVolDetail().getIdVolDetail();
+        // Vérifier qu'il y a des places disponibles
+        VolDetail volDetail = reservation.getVolDetail();
         Long idClasse = reservation.getClasseSiege().getIdClasse();
-
-        // Vérifier et décrémenter les places
-        boolean decremented = volClasseService.decrementPlaces(idVolDetail, idClasse);
-        if (!decremented) {
+        
+        int placesRestantes = volDetail.getPlacesRestantesByClasse(idClasse);
+        if (placesRestantes <= 0) {
             throw new IllegalStateException("Aucune place disponible pour la classe " 
                     + reservation.getClasseSiege().getLibelle() + " sur ce vol.");
+        }
+
+        // Générer numéro de réservation
+        if (reservation.getNumeroReservation() == null || reservation.getNumeroReservation().isEmpty()) {
+            reservation.setNumeroReservation(generateNumeroReservation());
+        }
+
+        if (reservation.getStatut() == null) {
+            reservation.setStatut("EN_ATTENTE");
         }
 
         return reservationRepository.save(reservation);
     }
 
     /**
+     * Génère un numéro de réservation unique
+     */
+    private String generateNumeroReservation() {
+        return "RES-" + System.currentTimeMillis();
+    }
+
+    /**
      * Met à jour une réservation.
-     * Si la réservation est annulée, restaure les places.
+     * Si la réservation est annulée, les places sont libérées (recalculées dynamiquement).
      */
     @Transactional
     public Reservation update(Reservation reservation) {
         Reservation existing = reservationRepository.findById(reservation.getIdReservation()).orElse(null);
         
-        // Si la réservation passe à ANNULÉ, restaurer les places
-        if (existing != null 
-                && !"ANNULÉ".equals(existing.getStatut()) 
-                && "ANNULÉ".equals(reservation.getStatut())) {
-            
-            if (reservation.getVolDetail() != null && reservation.getClasseSiege() != null) {
-                volClasseService.incrementPlaces(
-                        reservation.getVolDetail().getIdVolDetail(),
-                        reservation.getClasseSiege().getIdClasse()
-                );
-            }
+        if (existing == null) {
+            throw new IllegalArgumentException("Réservation non trouvée.");
         }
+        
+        // Validation des changements
+        validateReservation(reservation);
         
         return reservationRepository.save(reservation);
     }
 
     /**
-     * Annule une réservation et restaure les places.
+     * Annule une réservation (les places sont libérées automatiquement via recalcul dynamique)
      */
     @Transactional
     public Reservation cancel(Long id) {
@@ -134,7 +143,7 @@ public class ReservationService {
     }
     
     /**
-     * Annule une réservation et restaure les places.
+     * Annule une réservation (les places sont libérées automatiquement via recalcul dynamique)
      */
     @Transactional
     public Reservation cancel(Reservation reservation) {
@@ -146,29 +155,21 @@ public class ReservationService {
             return reservation; // Déjà annulée
         }
         
-        // Restaurer les places
-        if (reservation.getVolDetail() != null && reservation.getClasseSiege() != null) {
-            volClasseService.incrementPlaces(
-                    reservation.getVolDetail().getIdVolDetail(),
-                    reservation.getClasseSiege().getIdClasse()
-            );
-        }
-        
         reservation.setStatut("ANNULÉ");
         return reservationRepository.save(reservation);
     }
 
     /**
-     * Récupère le prix depuis prix_classe_age.
+     * Calcule le prix final pour une réservation (prix de base + remise appliquée)
      */
-    public BigDecimal getPrix(Reservation reservation) {
+    public BigDecimal getPrixFinal(Reservation reservation) {
         if (reservation.getVolDetail() == null 
                 || reservation.getClasseSiege() == null 
                 || reservation.getCategorieAge() == null) {
             return BigDecimal.ZERO;
         }
         
-        return prixClasseAgeService.getMontant(
+        return volDetailService.getPrixFinal(
                 reservation.getVolDetail().getIdVolDetail(),
                 reservation.getClasseSiege().getIdClasse(),
                 reservation.getCategorieAge().getIdCategorie()
@@ -176,23 +177,52 @@ public class ReservationService {
     }
 
     /**
+     * Récupère le prix de base (sans remise)
+     */
+    public BigDecimal getPrixBase(Reservation reservation) {
+        if (reservation.getVolDetail() == null || reservation.getClasseSiege() == null) {
+            return BigDecimal.ZERO;
+        }
+        
+        return volDetailService.getPrixBase(
+                reservation.getVolDetail().getIdVolDetail(),
+                reservation.getClasseSiege().getIdClasse()
+        );
+    }
+
+    /**
      * Vérifie la disponibilité des places pour une classe donnée.
+     * Les places sont calculées comme: Capacité - Nombre de réservations confirmées/en attente
      */
     public boolean hasPlacesDisponibles(Long idVolDetail, Long idClasse) {
-        return volClasseService.hasPlacesDisponibles(idVolDetail, idClasse);
+        int placesRestantes = volDetailService.getPlacesRestantes(idVolDetail, idClasse);
+        return placesRestantes > 0;
     }
 
     /**
      * Retourne le nombre de places restantes pour une classe donnée.
+     * Calculé comme: Capacité - Nombre de réservations confirmées/en attente
      */
     public int getPlacesRestantes(Long idVolDetail, Long idClasse) {
-        return volClasseService.getPlacesRestantes(idVolDetail, idClasse);
+        return volDetailService.getPlacesRestantes(idVolDetail, idClasse);
+    }
+
+    /**
+     * Retourne le nombre total de places réservées pour un vol
+     */
+    public int getNombrePlacesReservees(Long idVolDetail) {
+        VolDetail volDetail = volDetailService.getById(idVolDetail);
+        if (volDetail == null) return 0;
+        return volDetail.getNombrePlacesReservees();
     }
 
     public void delete(Long id) {
         reservationRepository.deleteById(id);
     }
 
+    /**
+     * Valide que les champs obligatoires sont remplis et que les places sont disponibles
+     */
     private void validateReservation(Reservation reservation) {
         if (reservation.getVolDetail() == null) {
             throw new IllegalArgumentException("Le vol est obligatoire.");
@@ -211,7 +241,7 @@ public class ReservationService {
         Long idVolDetail = reservation.getVolDetail().getIdVolDetail();
         Long idClasse = reservation.getClasseSiege().getIdClasse();
         
-        if (!volClasseService.hasPlacesDisponibles(idVolDetail, idClasse)) {
+        if (!hasPlacesDisponibles(idVolDetail, idClasse)) {
             throw new IllegalStateException("Aucune place disponible pour la classe " 
                     + reservation.getClasseSiege().getLibelle() + " sur ce vol.");
         }

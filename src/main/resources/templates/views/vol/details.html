@@ -64,12 +64,10 @@
                         <td th:text="${#temporals.format(detail.dateHeureArrivee,'yyyy-MM-dd HH:mm')}"></td>
                         <td>
                             <div class="class-badges">
-                                <span th:each="vc : ${detail.volClasses}" 
+                                <span th:each="classe : ${classes}" 
                                       class="class-badge"
-                                      th:text="${vc.classeSiege.code} + ': ' + ${vc.placesRestantes}">
+                                      th:text="${classe.code} + ': ' + ${detail.getPlacesRestantesByClasse(classe.idClasse)}">
                                 </span>
-                                <span th:if="${detail.volClasses == null or detail.volClasses.isEmpty()}" 
-                                      style="color: #999;">Non defini</span>
                             </div>
                         </td>
                         <td>
@@ -78,7 +76,7 @@
                         </td>
                         <td>
                             <span style="color:#4caf50;font-weight:bold" 
-                                  th:text="${detail.chiffreAffairesReel != null ? #numbers.formatDecimal(detail.chiffreAffairesReel,0,0) + ' MGA' : '0 MGA'}"></span>
+                                  th:text="${caReelsMap[detail.idVolDetail] != null ? #numbers.formatDecimal(caReelsMap[detail.idVolDetail],0,0) + ' MGA' : '0 MGA'}"></span>
                         </td>
                         <td th:text="${detail.maxRevenue != null ? #numbers.formatDecimal(detail.maxRevenue,0,0) + ' MGA' : '—'}"></td>
                         <td>

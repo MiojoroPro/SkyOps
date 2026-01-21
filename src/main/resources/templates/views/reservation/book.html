@@ -6,196 +6,613 @@
     <title>Réserver | Compagnie aérienne</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <style>
-        .flight-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .flight-info p { margin: 5px 0; }
-        .class-selection { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0; }
-        .class-card { 
-            border: 2px solid #ddd; 
-            border-radius: 8px; 
-            padding: 15px; 
+        .booking-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+        }
+        @media (max-width: 900px) {
+            .booking-grid { grid-template-columns: 1fr; }
+        }
+        .flight-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .flight-summary-item {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+        }
+        .flight-summary-item label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 4px;
+        }
+        .flight-summary-item span {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .form-section {
+            margin-top: 24px;
+        }
+        .form-section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-light);
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+        }
+        .form-group select:focus, .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .class-card {
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            background: var(--bg-primary);
+        }
+        .class-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .class-card.selected {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+        .class-card.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: var(--bg-tertiary);
+        }
+        .class-card .class-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .class-card .class-places {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .class-card .class-places.low {
+            color: var(--danger);
+            font-weight: 600;
+        }
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .category-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             transition: all 0.2s;
         }
-        .class-card:hover { border-color: #2196f3; }
-        .class-card.selected { border-color: #4caf50; background: #e8f5e9; }
-        .class-card.unavailable { opacity: 0.5; cursor: not-allowed; }
-        .class-card h4 { margin: 0 0 10px 0; }
-        .class-card .places { color: #666; font-size: 0.9em; }
-        .class-card .places.low { color: #f44336; }
-        .price-info { margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; }
-        .price-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .price-table th, .price-table td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-        .form-error { background: #ffebee; color: #c62828; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
-        .category-selection { margin: 20px 0; }
-        .category-option { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; cursor: pointer; }
-        .category-option:hover { background: #f5f5f5; }
-        .category-option.selected { background: #e3f2fd; border-color: #2196f3; }
+        .category-option:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary);
+        }
+        .category-option.selected {
+            background: rgba(37, 99, 235, 0.05);
+            border-color: var(--primary);
+        }
+        .category-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .category-info { flex: 1; }
+        .category-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .category-age {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .quantity-control button {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            background: var(--bg-primary);
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quantity-control button:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .quantity-control input {
+            width: 80px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .quantity-presets {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .preset-btn {
+            padding: 6px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 100px;
+            background: var(--bg-tertiary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .preset-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        .checkbox-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .checkbox-label strong {
+            display: block;
+            color: var(--text-primary);
+        }
+        .checkbox-label span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .price-sidebar {
+            position: sticky;
+            top: 32px;
+        }
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .price-table th, .price-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.85rem;
+        }
+        .price-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+        .price-total {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            text-align: center;
+        }
+        .price-total .total-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        .price-total .total-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+        .form-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--danger);
+        }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
-    <div th:replace="ui/menu :: menu"></div>
+    <div th:replace="~{ui/menu :: menu}"></div>
 
     <main class="main-area">
+
         <header class="main-header">
             <div>
-                <h1>Réserver un siège</h1>
+                <p class="eyebrow">Réservation</p>
+                <h1>Réserver des billets</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span th:text="'Vol ' + ${detail.vol.numeroVol}">Vol MD001</span>
             </div>
         </header>
 
-        <section class="content-section">
-            <article class="card">
-                
-                <!-- Informations du vol -->
-                <div class="flight-info">
-                    <h3 class="section-title">Détails du vol</h3>
-                    <p><strong>Vol :</strong> <span th:text="${detail.vol.numeroVol}"></span></p>
-                    <p><strong>Trajet :</strong> 
-                        <span th:text="${detail.vol.aeroportDepart.ville}"></span> → 
-                        <span th:text="${detail.vol.aeroportArrivee.ville}"></span>
-                    </p>
-                    <p><strong>Avion :</strong> <span th:text="${detail.avion.modele}"></span></p>
-                    <p><strong>Départ :</strong> <span th:text="${#temporals.format(detail.dateHeureDepart,'dd/MM/yyyy HH:mm')}"></span></p>
-                    <p><strong>Arrivée :</strong> <span th:text="${#temporals.format(detail.dateHeureArrivee,'dd/MM/yyyy HH:mm')}"></span></p>
-                </div>
+        <div th:if="${error}" class="form-error" th:text="${error}"></div>
 
-                <div th:if="${error}" class="form-error" th:text="${error}"></div>
+        <div class="booking-grid">
+            
+            <!-- Formulaire principal -->
+            <div class="booking-main">
+                
+                <!-- Résumé du vol -->
+                <section class="table-wrapper">
+                    <header>
+                        <h2 class="section-title">Détails du vol</h2>
+                        <span class="badge" th:text="${detail.statut}">CONFIRME</span>
+                    </header>
+                    <div class="flight-summary">
+                        <div class="flight-summary-item">
+                            <label>Trajet</label>
+                            <span th:text="${detail.vol.aeroportDepart.ville} + ' → ' + ${detail.vol.aeroportArrivee.ville}">TNR → NOS</span>
+                        </div>
+                        <div class="flight-summary-item">
+                            <label>Départ</label>
+                            <span th:text="${#temporals.format(detail.dateHeureDepart, 'dd/MM/yyyy HH:mm')}">20/01/2026 20:13</span>
+                        </div>
+                        <div class="flight-summary-item">
+                            <label>Arrivée</label>
+                            <span th:text="${#temporals.format(detail.dateHeureArrivee, 'dd/MM/yyyy HH:mm')}">20/01/2026 21:13</span>
+                        </div>
+                        <div class="flight-summary-item">
+                            <label>Avion</label>
+                            <span th:text="${detail.avion.modele}">Airbus A320</span>
+                        </div>
+                    </div>
+                </section>
 
                 <form th:action="@{/reservations/book/{id}(id=${detail.idVolDetail})}" method="post" id="bookForm">
+                    
+                    <input type="hidden" name="bookingMode" value="single" />
+                    <input type="hidden" name="bulkQuantity" id="bulkQuantity" value="1" />
 
-                    <!-- Sélection du client -->
-                    <div class="form-group">
-                        <label>Client *</label>
-                        <select name="utilisateurId" required>
-                            <option value="">Sélectionner un client</option>
-                            <option th:each="u : ${utilisateurs}"
-                                    th:value="${u.idUtilisateur}"
-                                    th:text="${u.nom} + ' ' + ${u.prenom} + ' (' + ${u.email} + ')'"></option>
-                        </select>
-                    </div>
-
-                    <!-- Sélection de la classe de siège -->
-                    <h3 class="section-title">Choisir la classe de siège *</h3>
-                    <div class="class-selection">
-                        <div th:each="vc : ${volClasses}" 
-                             th:class="'class-card' + (${vc.placesRestantes <= 0} ? ' unavailable' : '')"
-                             th:data-classe-id="${vc.classeSiege.idClasse}"
-                             th:data-places="${vc.placesRestantes}"
-                             onclick="selectClass(this)">
-                            <h4 th:text="${vc.classeSiege.libelle}">Classe</h4>
-                            <span th:class="'places' + (${vc.placesRestantes <= 5} ? ' low' : '')"
-                                  th:text="${vc.placesRestantes > 0} ? ${vc.placesRestantes} + ' places disponibles' : 'Complet'">
-                            </span>
+                    <!-- Client -->
+                    <section class="table-wrapper" style="margin-top: 24px;">
+                        <header>
+                            <h2 class="section-title">Client</h2>
+                        </header>
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label>Sélectionner le client *</label>
+                            <select name="utilisateurId" required id="clientSelect">
+                                <option value="">-- Choisir un client --</option>
+                                <option th:each="u : ${utilisateurs}"
+                                        th:value="${u.idUtilisateur}"
+                                        th:text="${u.nom} + ' ' + ${u.prenom} + ' (' + ${u.email} + ')'"></option>
+                            </select>
                         </div>
-                        <div th:if="${volClasses == null or volClasses.isEmpty()}" style="color: #999;">
-                            Aucune classe configurée pour ce vol
-                        </div>
-                    </div>
-                    <input type="hidden" name="classeSiegeId" id="classeSiegeId" required />
+                    </section>
 
-                    <!-- Sélection de la catégorie d'âge -->
-                    <h3 class="section-title">Catégorie du passager *</h3>
-                    <div class="category-selection">
-                        <div th:each="cat : ${categories}" 
-                             class="category-option"
-                             th:data-categorie-id="${cat.idCategorie}"
-                             onclick="selectCategory(this)">
-                            <input type="radio" name="categorieAgeIdRadio" th:value="${cat.idCategorie}" />
-                            <div>
-                                <strong th:text="${cat.libelle}">Catégorie</strong>
-                                <span th:if="${cat.ageMin != null or cat.ageMax != null}" style="color: #666; margin-left: 10px;">
-                                    (<span th:if="${cat.ageMin != null}" th:text="${cat.ageMin} + ' ans'"></span>
-                                    <span th:if="${cat.ageMin != null and cat.ageMax != null}"> - </span>
-                                    <span th:if="${cat.ageMax != null}" th:text="${cat.ageMax} + ' ans'"></span>)
-                                </span>
+                    <!-- Classe de siège -->
+                    <section class="table-wrapper" style="margin-top: 24px;">
+                        <header>
+                            <h2 class="section-title">Classe de siège</h2>
+                        </header>
+                        <div style="margin-top: 16px;">
+                            <div class="class-grid">
+                                <div th:each="vc : ${volClasses}" 
+                                     th:class="'class-card' + (${vc.placesRestantes <= 0} ? ' unavailable' : '')"
+                                     th:data-classeid="${vc.classeSiege.idClasse}"
+                                     th:data-places="${vc.placesRestantes}">
+                                    <div class="class-name" th:text="${vc.classeSiege.libelle}">Classe</div>
+                                    <div th:class="'class-places' + (${vc.placesRestantes <= 5} ? ' low' : '')"
+                                         th:text="${vc.placesRestantes > 0} ? ${vc.placesRestantes} + ' places' : 'Complet'">
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${volClasses == null or #lists.isEmpty(volClasses)}" style="color: var(--text-muted); text-align: center; padding: 20px;">
+                                Aucune classe configurée pour ce vol
                             </div>
                         </div>
-                    </div>
-                    <input type="hidden" name="categorieAgeId" id="categorieAgeId" required />
+                        <input type="hidden" name="classeSiegeId" id="classeSiegeId" value="" />
+                    </section>
 
-                    <!-- Grille des prix -->
-                    <div class="price-info" th:if="${prixClasses != null and !prixClasses.isEmpty()}">
-                        <h4>Grille tarifaire</h4>
-                        <table class="price-table">
-                            <thead>
-                                <tr>
-                                    <th>Classe</th>
-                                    <th>Catégorie</th>
-                                    <th>Prix</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="prix : ${prixClasses}">
-                                    <td th:text="${prix.classeSiege.libelle}">Classe</td>
-                                    <td th:text="${prix.categorieAge.libelle}">Catégorie</td>
-                                    <td th:text="${#numbers.formatDecimal(prix.prix,0,0)} + ' MGA'">Prix</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <!-- Catégorie du passager -->
+                    <section class="table-wrapper" style="margin-top: 24px;">
+                        <header>
+                            <h2 class="section-title">Catégorie du passager</h2>
+                        </header>
+                        <div class="category-list" style="margin-top: 16px;">
+                            <div th:each="cat : ${categories}" 
+                                 class="category-option"
+                                 th:data-categorieid="${cat.idCategorie}">
+                                <input type="radio" name="categorieAgeIdRadio" th:value="${cat.idCategorie}" />
+                                <div class="category-info">
+                                    <div class="category-name" th:text="${cat.libelle}">Catégorie</div>
+                                    <div class="category-age" th:if="${cat.ageMin != null or cat.ageMax != null}">
+                                        <span th:if="${cat.ageMin != null}" th:text="${cat.ageMin} + ' ans'"></span>
+                                        <span th:if="${cat.ageMin != null and cat.ageMax != null}"> - </span>
+                                        <span th:if="${cat.ageMax != null}" th:text="${cat.ageMax} + ' ans'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="categorieAgeId" id="categorieAgeId" value="" />
+                    </section>
 
-                    <!-- Option paiement -->
-                    <div class="form-group" style="margin-top: 20px;">
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" name="payerMaintenant" />
-                            <span>Payer maintenant</span>
-                        </label>
-                        <span class="form-help">Si coché, le paiement sera simulé immédiatement</span>
-                    </div>
+                    <!-- Nombre de billets -->
+                    <section class="table-wrapper" style="margin-top: 24px;">
+                        <header>
+                            <h2 class="section-title">Nombre de billets</h2>
+                        </header>
+                        <div style="margin-top: 16px;">
+                            <div class="quantity-control">
+                                <button type="button" onclick="changeQuantity(-1)">−</button>
+                                <input type="number" id="quantityInput" name="quantity" value="1" min="1" max="100" 
+                                       onchange="updateQuantity(this.value)" />
+                                <button type="button" onclick="changeQuantity(1)">+</button>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;" id="maxPlacesInfo">Max: -- places</span>
+                            </div>
+                            <div class="quantity-presets">
+                                <button type="button" class="preset-btn" onclick="setQuantity(1)">1</button>
+                                <button type="button" class="preset-btn" onclick="setQuantity(5)">5</button>
+                                <button type="button" class="preset-btn" onclick="setQuantity(10)">10</button>
+                                <button type="button" class="preset-btn" onclick="setQuantity(25)">25</button>
+                                <button type="button" class="preset-btn" onclick="setQuantity(50)">50</button>
+                            </div>
+                        </div>
+                    </section>
 
-                    <div class="form-actions" style="margin-top: 30px;">
-                        <button type="submit" class="btn btn-add" id="submitBtn">Confirmer la réservation</button>
-                        <a th:href="@{/vol/{id}/details(id=${detail.vol.idVol})}" class="btn btn-secondary">Retour</a>
-                    </div>
+                    <!-- Options de paiement -->
+                    <section class="table-wrapper" style="margin-top: 24px;">
+                        <header>
+                            <h2 class="section-title">Options</h2>
+                        </header>
+                        <div style="margin-top: 16px;">
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="payerMaintenant" id="payerMaintenant" />
+                                <div class="checkbox-label">
+                                    <strong>Payer maintenant</strong>
+                                    <span>Le paiement sera traité immédiatement</span>
+                                </div>
+                            </label>
+                        </div>
+                    </section>
 
+                    <div style="margin-top: 24px; display: flex; gap: 12px;">
+                        <button type="submit" class="btn btn-add" style="flex: 1; padding: 14px; font-size: 1rem;">
+                            Confirmer la réservation
+                        </button>
+                        <a th:href="@{/reservations/new}" class="btn btn-secondary" style="padding: 14px 24px;">
+                            Retour
+                        </a>
+                    </div>
+                    
                 </form>
+            </div>
+            
+            <!-- Sidebar prix -->
+            <div class="price-sidebar">
+                <div class="table-wrapper" style="padding: 0; overflow: hidden;">
+                    <header style="padding: 16px;">
+                        <h2 class="section-title" style="margin: 0;">Grille tarifaire</h2>
+                    </header>
+                    <table class="price-table" th:if="${prixClasses != null and !prixClasses.isEmpty()}">
+                        <thead>
+                            <tr>
+                                <th>Classe</th>
+                                <th>Catégorie</th>
+                                <th>Prix</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="prix : ${prixClasses}">
+                                <td th:text="${prix.classeSiege.libelle}">Classe</td>
+                                <td th:text="${prix.categorieAge.libelle}">Catégorie</td>
+                                <td th:text="${#numbers.formatDecimal(prix.prix, 0, 'POINT', 0, 'POINT')} + ' MGA'">Prix</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${prixClasses == null or prixClasses.isEmpty()}" style="padding: 20px; text-align: center; color: var(--text-muted);">
+                        Aucun tarif configuré
+                    </div>
+                    <div class="price-total">
+                        <div class="total-label">Total estimé</div>
+                        <div class="total-value" id="totalPrice">-- MGA</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
 
-            </article>
-        </section>
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+        </footer>
 
     </main>
 </div>
 
-<script>
-function selectClass(element) {
-    if (element.classList.contains('unavailable')) return;
+<script th:inline="javascript">
+    // Utilise prixSimple (DTO simplifié) pour éviter les références circulaires JPA
+    const prixData = /*[[${prixSimple}]]*/ [];
+    let selectedClassePlaces = 0;
     
-    // Désélectionner les autres
-    document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+    // Initialisation au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ajouter les listeners pour les cartes de classe
+        document.querySelectorAll('.class-card').forEach(card => {
+            card.addEventListener('click', function() {
+                selectClass(this);
+            });
+        });
+        
+        // Ajouter les listeners pour les options de catégorie
+        document.querySelectorAll('.category-option').forEach(option => {
+            option.addEventListener('click', function() {
+                selectCategory(this);
+            });
+        });
+    });
     
-    // Sélectionner celle-ci
-    element.classList.add('selected');
-    document.getElementById('classeSiegeId').value = element.dataset.classeId;
-}
-
-function selectCategory(element) {
-    // Désélectionner les autres
-    document.querySelectorAll('.category-option').forEach(c => c.classList.remove('selected'));
-    
-    // Sélectionner celle-ci
-    element.classList.add('selected');
-    element.querySelector('input[type="radio"]').checked = true;
-    document.getElementById('categorieAgeId').value = element.dataset.categorieId;
-}
-
-// Validation avant soumission
-document.getElementById('bookForm').addEventListener('submit', function(e) {
-    const classeId = document.getElementById('classeSiegeId').value;
-    const categorieId = document.getElementById('categorieAgeId').value;
-    
-    if (!classeId) {
-        e.preventDefault();
-        alert('Veuillez sélectionner une classe de siège');
-        return false;
+    function selectClass(element) {
+        if (element.classList.contains('unavailable')) return;
+        
+        document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+        element.classList.add('selected');
+        
+        // Get the classeid from data attribute (th:data-classeid becomes data-classeid)
+        const classeId = element.dataset.classeid;
+        console.log('Element dataset:', element.dataset);
+        console.log('Selected classe ID:', classeId);
+        
+        document.getElementById('classeSiegeId').value = classeId || '';
+        
+        selectedClassePlaces = parseInt(element.dataset.places) || 0;
+        document.getElementById('maxPlacesInfo').textContent = 'Max: ' + selectedClassePlaces + ' places';
+        
+        // Ajuster la quantité si nécessaire
+        const currentQty = parseInt(document.getElementById('quantityInput').value) || 1;
+        if (currentQty > selectedClassePlaces) {
+            setQuantity(selectedClassePlaces);
+        }
+        
+        updateTotalPrice();
     }
     
-    if (!categorieId) {
-        e.preventDefault();
-        alert('Veuillez sélectionner une catégorie de passager');
-        return false;
+    function selectCategory(element) {
+        document.querySelectorAll('.category-option').forEach(c => c.classList.remove('selected'));
+        element.classList.add('selected');
+        element.querySelector('input[type="radio"]').checked = true;
+        
+        // Get the categorieid from data attribute (th:data-categorieid becomes data-categorieid)
+        const categorieId = element.dataset.categorieid;
+        console.log('Selected categorie ID:', categorieId);
+        
+        document.getElementById('categorieAgeId').value = categorieId || '';
+        
+        updateTotalPrice();
     }
-});
+    
+    function changeQuantity(delta) {
+        const input = document.getElementById('quantityInput');
+        let newValue = parseInt(input.value) + delta;
+        newValue = Math.max(1, Math.min(newValue, selectedClassePlaces || 100));
+        input.value = newValue;
+        updateQuantity(newValue);
+    }
+    
+    function setQuantity(value) {
+        const maxPlaces = selectedClassePlaces || 100;
+        value = Math.max(1, Math.min(value, maxPlaces));
+        document.getElementById('quantityInput').value = value;
+        updateQuantity(value);
+    }
+    
+    function updateQuantity(value) {
+        document.getElementById('bulkQuantity').value = value;
+        updateTotalPrice();
+    }
+    
+    function updateTotalPrice() {
+        const classeId = document.getElementById('classeSiegeId').value;
+        const categorieId = document.getElementById('categorieAgeId').value;
+        const quantity = parseInt(document.getElementById('quantityInput').value) || 1;
+        
+        let priceText = '-- MGA';
+        
+        if (classeId && categorieId && prixData && prixData.length > 0) {
+            // prixSimple utilise classeId et categorieId directement
+            const prix = prixData.find(p => 
+                p.classeId == classeId && 
+                p.categorieId == categorieId
+            );
+            if (prix) {
+                const total = prix.prix * quantity;
+                priceText = total.toLocaleString('fr-FR') + ' MGA';
+            }
+        }
+        
+        document.getElementById('totalPrice').textContent = priceText;
+    }
+    
+    // Validation
+    document.getElementById('bookForm').addEventListener('submit', function(e) {
+        const classeId = document.getElementById('classeSiegeId').value;
+        const categorieId = document.getElementById('categorieAgeId').value;
+        const clientId = document.getElementById('clientSelect').value;
+        const quantity = parseInt(document.getElementById('quantityInput').value) || 1;
+        
+        console.log('Form submit - classeSiegeId:', classeId, 'categorieAgeId:', categorieId);
+        
+        if (!clientId) {
+            e.preventDefault();
+            alert('Veuillez sélectionner un client');
+            return false;
+        }
+        
+        if (!classeId) {
+            e.preventDefault();
+            alert('Veuillez sélectionner une classe de siège');
+            return false;
+        }
+        
+        if (!categorieId) {
+            e.preventDefault();
+            alert('Veuillez sélectionner une catégorie de passager');
+            return false;
+        }
+        
+        if (selectedClassePlaces > 0 && quantity > selectedClassePlaces) {
+            e.preventDefault();
+            alert('Le nombre de billets demandé dépasse les places disponibles');
+            return false;
+        }
+        
+        return true;
+    });
 </script>
 
 </body>

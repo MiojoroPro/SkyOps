@@ -24,8 +24,7 @@ public class VolController {
     private final AvionService avionService;
     private final ClasseSiegeService classeSiegeService;
     private final CategorieAgeService categorieAgeService;
-    private final VolClasseService volClasseService;
-    private final PrixClasseAgeService prixClasseAgeService;
+    private final PrixClasseService prixClasseService;
     private final RemiseClasseCategorieService remiseService;
 
     public VolController(VolService volService,
@@ -35,8 +34,7 @@ public class VolController {
                          AvionService avionService,
                          ClasseSiegeService classeSiegeService,
                          CategorieAgeService categorieAgeService,
-                         VolClasseService volClasseService,
-                         PrixClasseAgeService prixClasseAgeService,
+                         PrixClasseService prixClasseService,
                          RemiseClasseCategorieService remiseService) {
         this.volService = volService;
         this.volDetailService = volDetailService;
@@ -45,8 +43,7 @@ public class VolController {
         this.avionService = avionService;
         this.classeSiegeService = classeSiegeService;
         this.categorieAgeService = categorieAgeService;
-        this.volClasseService = volClasseService;
-        this.prixClasseAgeService = prixClasseAgeService;
+        this.prixClasseService = prixClasseService;
         this.remiseService = remiseService;
     }
 
@@ -117,8 +114,18 @@ public class VolController {
     @GetMapping("/{id}/details")
     public String volDetails(@PathVariable Long id, Model model) {
         Vol vol = volService.getById(id);
+        List<VolDetail> details = volDetailService.getByVol(vol);
+        
+        // Calculer les CA réels avec remises pour chaque détail
+        Map<Long, BigDecimal> caReelsMap = new HashMap<>();
+        for (VolDetail detail : details) {
+            BigDecimal caReel = volDetailService.calculerChiffreAffairesReel(detail);
+            caReelsMap.put(detail.getIdVolDetail(), caReel);
+        }
+        
         model.addAttribute("vol", vol);
-        model.addAttribute("details", volDetailService.getByVol(vol));
+        model.addAttribute("details", details);
+        model.addAttribute("caReelsMap", caReelsMap);
         model.addAttribute("newDetail", new VolDetail());
         model.addAttribute("avions", avionService.getAll());
         model.addAttribute("classes", classeSiegeService.getAll());
@@ -153,7 +160,9 @@ public class VolController {
         return "views/vol/add-detail";
     }
 
-    // Ajouter un VolDetail avec places par classe et prix par classe/âge
+    // Ajouter un VolDetail avec prix de base par classe
+    // Les places restantes sont calculées dynamiquement à partir des réservations
+    // Les places utilisent automatiquement la capacité définie dans l'avion
     @PostMapping("/{id}/details/add")
     @Transactional
     public String addVolDetail(@PathVariable Long id,
@@ -170,48 +179,39 @@ public class VolController {
         // Sauvegarder le VolDetail
         VolDetail saved = volDetailService.create(volDetail);
         
-        // Créer les entrées VolClasse (places par classe)
+        // Créer les entrées PrixClasse (prix de base par classe)
         for (ClasseSiege classe : classeSiegeService.getAll()) {
-            String placesKey = "places_" + classe.getIdClasse();
-            String placesStr = allParams.get(placesKey);
-            if (placesStr != null && !placesStr.isBlank()) {
+            String prixBaseKey = "prix_adulte_" + classe.getIdClasse();
+            String prixBaseStr = allParams.get(prixBaseKey);
+            
+            if (prixBaseStr != null && !prixBaseStr.isBlank()) {
                 try {
-                    int places = Integer.parseInt(placesStr);
-                    if (places >= 0) {
-                        VolClasse vc = new VolClasse();
-                        vc.setVolDetail(saved);
-                        vc.setClasseSiege(classe);
-                        vc.setPlacesRestantes(places);
-                        volClasseService.save(vc);
+                    BigDecimal prixBase = new BigDecimal(prixBaseStr);
+                    if (prixBase.compareTo(BigDecimal.ZERO) >= 0) {
+                        PrixClasse pc = new PrixClasse();
+                        pc.setVolDetail(saved);
+                        pc.setClasseSiege(classe);
+                        pc.setPrixBase(prixBase);
+                        prixClasseService.save(pc);
                     }
                 } catch (NumberFormatException ignored) {}
             }
         }
         
-        // Créer les entrées PrixClasseAge (prix basé sur tarif adulte + pourcentage par classe/catégorie)
+        // Créer les entrées RemiseClasseCategorie si fournies
         for (ClasseSiege classe : classeSiegeService.getAll()) {
-            // Récupérer le tarif adulte pour cette classe
-            String prixAdulteKey = "prix_adulte_" + classe.getIdClasse();
-            String prixAdulteStr = allParams.get(prixAdulteKey);
-            
-            if (prixAdulteStr != null && !prixAdulteStr.isBlank()) {
-                try {
-                    BigDecimal prixAdulte = new BigDecimal(prixAdulteStr);
-                    if (prixAdulte.compareTo(BigDecimal.ZERO) >= 0) {
-                        // Générer les prix pour toutes les catégories d'âge
-                        for (CategorieAge categorie : categorieAgeService.getAll()) {
-                            // Utiliser le pourcentage spécifique à la classe et catégorie
-                            BigDecimal prix = remiseService.calculerPrix(prixAdulte, classe.getIdClasse(), categorie.getIdCategorie());
-                            
-                            PrixClasseAge pca = new PrixClasseAge();
-                            pca.setVolDetail(saved);
-                            pca.setClasseSiege(classe);
-                            pca.setCategorieAge(categorie);
-                            pca.setPrix(prix);
-                            prixClasseAgeService.save(pca);
+            for (CategorieAge categorie : categorieAgeService.getAll()) {
+                String remiseKey = "remise_" + classe.getIdClasse() + "_" + categorie.getIdCategorie();
+                String remiseStr = allParams.get(remiseKey);
+                
+                if (remiseStr != null && !remiseStr.isBlank()) {
+                    try {
+                        BigDecimal pourcentage = new BigDecimal(remiseStr);
+                        if (pourcentage.compareTo(BigDecimal.ZERO) >= 0 && pourcentage.compareTo(BigDecimal.valueOf(100)) <= 100) {
+                            remiseService.save(classe.getIdClasse(), categorie.getIdCategorie(), pourcentage);
                         }
-                    }
-                } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {}
+                }
             }
         }
         

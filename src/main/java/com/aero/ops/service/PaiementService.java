@@ -38,11 +38,11 @@ public class PaiementService {
 
     /**
      * Crée un paiement pour une réservation.
-     * Le montant est récupéré automatiquement depuis prix_classe_age.
+     * Le montant est récupéré automatiquement depuis prix_classe avec remise appliquée.
      */
     @Transactional
     public Paiement createForReservation(Reservation reservation, boolean payerMaintenant) {
-        BigDecimal montant = reservationService.getPrix(reservation);
+        BigDecimal montant = reservationService.getPrixFinal(reservation);
         
         Paiement paiement = new Paiement();
         paiement.setReservation(reservation);
@@ -82,8 +82,8 @@ public class PaiementService {
             paiement.setReservation(reservation);
         }
         
-        // Récupérer le montant depuis prix_classe_age
-        BigDecimal montant = reservationService.getPrix(reservation);
+        // Récupérer le montant depuis prix_classe avec remise appliquée
+        BigDecimal montant = reservationService.getPrixFinal(reservation);
         paiement.setMontant(montant);
         paiement.setStatut("PAYE");
         paiement.setDatePaiement(LocalDateTime.now());

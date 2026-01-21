@@ -67,7 +67,7 @@ public class PrixClasseAgeService {
         
         // Sinon, calculer à partir du prix adulte et du pourcentage classe/catégorie
         BigDecimal prixAdulte = getPrixAdulte(idVolDetail, idClasse);
-        return remiseService.calculerPrix(prixAdulte, idClasse, idCategorie);
+        return remiseService.calculerPrixAvecRemise(prixAdulte, idClasse, idCategorie);
     }
 
     public PrixClasseAge save(PrixClasseAge prixClasseAge) {

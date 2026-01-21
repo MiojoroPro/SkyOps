@@ -9,7 +9,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class RemiseClasseCategorieId implements Serializable {
+public class PrixClasseId implements Serializable {
+    private Long volDetail;
     private Long classeSiege;
-    private Long categorieAge;
 }

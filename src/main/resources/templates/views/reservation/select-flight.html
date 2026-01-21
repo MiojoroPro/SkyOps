@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réserver un vol | Compagnie aérienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .filters-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filter-group label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .filter-group input, .filter-group select {
+            padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+        }
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .flight-status {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-radius: 6px;
+        }
+        .status-confirme {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        .status-programme {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        .places-badge {
+            font-weight: 700;
+            color: var(--success);
+        }
+        .places-badge.low {
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <p class="eyebrow">Réservation</p>
+                <h1>Sélectionner un vol</h1>
+            </div>
+            <div class="user-chip">
+                <span class="status-dot"></span>
+                <span th:text="${volDetails != null ? volDetails.size() : 0} + ' vols disponibles'">0 vols</span>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+                <p class="badge">Statistiques</p>
+                <h2 class="section-title">Vols disponibles</h2>
+                <p class="module-description">Nombre total de places disponibles</p>
+                <h3 id="totalPlaces">0 places</h3>
+            </article>
+        </section>
+
+        <!-- Filtres -->
+        <section class="table-wrapper">
+            <header>
+                <h2 class="section-title">Filtres</h2>
+            </header>
+            <div class="filters-card">
+                <div class="filter-group">
+                    <label>Ville de départ</label>
+                    <input type="text" id="filterDepart" placeholder="Ex: Antananarivo"/>
+                </div>
+                <div class="filter-group">
+                    <label>Ville d'arrivée</label>
+                    <input type="text" id="filterArrivee" placeholder="Ex: Nosy Be"/>
+                </div>
+                <div class="filter-group">
+                    <label>Date de départ</label>
+                    <input type="date" id="filterDate"/>
+                </div>
+                <div class="filter-group">
+                    <label>Statut</label>
+                    <select id="filterStatut">
+                        <option value="">Tous les statuts</option>
+                        <option value="CONFIRME">Confirmé</option>
+                        <option value="PROGRAMME">Programmé</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Places minimum</label>
+                    <input type="number" id="filterPlaces" placeholder="Ex: 10" min="0"/>
+                </div>
+                <div class="filter-actions">
+                    <button type="button" class="btn btn-add" onclick="applyFilters()">Filtrer</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetFilters()">Réinitialiser</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Liste des vols -->
+        <section class="table-wrapper">
+            <header>
+                <h2 class="section-title">Vols disponibles</h2>
+            </header>
+
+            <div class="table-responsive" th:if="${volDetails != null and !volDetails.isEmpty()}">
+                <table class="data-table" id="flightsTable">
+                    <thead>
+                    <tr>
+                        <th>Vol</th>
+                        <th>Trajet</th>
+                        <th>Avion</th>
+                        <th>Départ</th>
+                        <th>Arrivée</th>
+                        <th>Statut</th>
+                        <th>Places</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="vd : ${volDetails}"
+                        th:data-depart="${vd.vol.aeroportDepart.ville}"
+                        th:data-arrivee="${vd.vol.aeroportArrivee.ville}"
+                        th:data-date="${#temporals.format(vd.dateHeureDepart, 'yyyy-MM-dd')}"
+                        th:data-statut="${vd.statut}"
+                        th:data-places="${vd.getPlacesTotalesRestantes()}">
+                        <td th:text="${vd.vol.numeroVol}">MD001</td>
+                        <td>
+                            <span th:text="${vd.vol.aeroportDepart.ville} + ' → ' + ${vd.vol.aeroportArrivee.ville}">
+                                Antananarivo → Nosy Be
+                            </span>
+                        </td>
+                        <td th:text="${vd.avion.modele}">Airbus A320</td>
+                        <td th:text="${#temporals.format(vd.dateHeureDepart,'dd/MM/yyyy HH:mm')}">20/01/2026 20:13</td>
+                        <td th:text="${#temporals.format(vd.dateHeureArrivee,'dd/MM/yyyy HH:mm')}">20/01/2026 21:13</td>
+                        <td>
+                            <span th:class="'flight-status status-' + ${vd.statut.toLowerCase()}"
+                                  th:text="${vd.statut == 'CONFIRME' ? 'Confirmé' : 'Programmé'}">
+                            </span>
+                        </td>
+                        <td>
+                            <span th:class="'places-badge' + (${vd.getPlacesTotalesRestantes() <= 20} ? ' low' : '')"
+                                  th:text="${vd.getPlacesTotalesRestantes()}">120</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/reservations/book/{id}(id=${vd.idVolDetail})}" class="btn btn-add">
+                                Réserver
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${volDetails == null or volDetails.isEmpty()}" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <p>Aucun vol disponible pour le moment</p>
+            </div>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+        </footer>
+
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTotalPlaces();
+    });
+    
+    function updateTotalPlaces() {
+        let total = 0;
+        document.querySelectorAll('#flightsTable tbody tr').forEach(row => {
+            if (row.style.display !== 'none') {
+                total += parseInt(row.dataset.places) || 0;
+            }
+        });
+        document.getElementById('totalPlaces').textContent = total.toLocaleString('fr-FR') + ' places';
+    }
+    
+    function applyFilters() {
+        const depart = document.getElementById('filterDepart').value.toLowerCase().trim();
+        const arrivee = document.getElementById('filterArrivee').value.toLowerCase().trim();
+        const date = document.getElementById('filterDate').value;
+        const statut = document.getElementById('filterStatut').value;
+        const minPlaces = parseInt(document.getElementById('filterPlaces').value) || 0;
+        
+        document.querySelectorAll('#flightsTable tbody tr').forEach(row => {
+            const rowDepart = row.dataset.depart.toLowerCase();
+            const rowArrivee = row.dataset.arrivee.toLowerCase();
+            const rowDate = row.dataset.date;
+            const rowStatut = row.dataset.statut;
+            const rowPlaces = parseInt(row.dataset.places) || 0;
+            
+            let show = true;
+            
+            if (depart && !rowDepart.includes(depart)) show = false;
+            if (arrivee && !rowArrivee.includes(arrivee)) show = false;
+            if (date && rowDate !== date) show = false;
+            if (statut && rowStatut !== statut) show = false;
+            if (minPlaces > 0 && rowPlaces < minPlaces) show = false;
+            
+            row.style.display = show ? '' : 'none';
+        });
+        
+        updateTotalPlaces();
+    }
+    
+    function resetFilters() {
+        document.getElementById('filterDepart').value = '';
+        document.getElementById('filterArrivee').value = '';
+        document.getElementById('filterDate').value = '';
+        document.getElementById('filterStatut').value = '';
+        document.getElementById('filterPlaces').value = '';
+        
+        document.querySelectorAll('#flightsTable tbody tr').forEach(row => {
+            row.style.display = '';
+        });
+        
+        updateTotalPlaces();
+    }
+</script>
+
+</body>
+</html>
