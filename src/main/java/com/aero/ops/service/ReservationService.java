@@ -34,6 +34,14 @@ public class ReservationService {
         return reservationRepository.findByVolDetail_Vol_IdVol(volId);
     }
 
+    public List<Reservation> getByVolDetail(Long idVolDetail) {
+        return reservationRepository.findByVolDetail_IdVolDetail(idVolDetail);
+    }
+
+    public List<Reservation> getByVolDetailAndClasse(Long idVolDetail, Long idClasse) {
+        return reservationRepository.findByVolDetail_IdVolDetailAndClasseSiege_IdClasse(idVolDetail, idClasse);
+    }
+
     public Reservation getById(Long id) {
         return reservationRepository.findById(id).orElse(null);
     }

@@ -10,4 +10,6 @@ import java.util.List;
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findByUtilisateur_IdUtilisateur(Long idUtilisateur);
     List<Reservation> findByVolDetail_Vol_IdVol(Long idVol);
+    List<Reservation> findByVolDetail_IdVolDetail(Long idVolDetail);
+    List<Reservation> findByVolDetail_IdVolDetailAndClasseSiege_IdClasse(Long idVolDetail, Long idClasse);
 }

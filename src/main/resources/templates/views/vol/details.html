@@ -89,6 +89,7 @@
                             </span>
                         </td>
                         <td>
+                            <a th:href="@{/vol/details/edit/{id}(id=${detail.idVolDetail})}" class="btn btn-edit">Modifier</a>
                             <a th:href="@{/reservations/book/{id}(id=${detail.idVolDetail})}" class="btn btn-apply">Réserver</a>
                             <a th:href="@{/vol/details/delete/{id}(id=${detail.idVolDetail})}"
                                class="btn-delete"

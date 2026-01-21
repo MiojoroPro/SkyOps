@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Modifier exécution - ' + ${vol.numeroVol}">Modifier Exécution</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .price-matrix { margin-top: 20px; }
+        .price-matrix table { width: 100%; border-collapse: collapse; }
+        .price-matrix th, .price-matrix td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+        .price-matrix th { background: #f5f5f5; }
+        .price-matrix input { width: 120px; text-align: right; }
+        .places-section { margin-top: 20px; }
+        .places-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .place-item { padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .place-item label { font-weight: bold; display: block; margin-bottom: 5px; }
+        .info-box { padding: 15px; background: #e8f5e9; border-radius: 8px; margin-bottom: 20px; }
+        .info-box strong { color: #2e7d32; }
+        .warning-box { padding: 15px; background: #fff3e0; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff9800; }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <div th:replace="ui/menu :: menu"></div>
+
+    <main class="main-area">
+
+        <header class="main-header">
+            <div>
+                <h1 th:text="'Modifier exécution #' + ${volDetail.idVolDetail} + ' - ' + ${vol.numeroVol}"></h1>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <article class="card">
+
+                <div class="warning-box">
+                    <strong>⚠️ Attention :</strong> La modification des paramètres de cette exécution peut affecter les réservations existantes. 
+                    Les places restantes seront recalculées automatiquement si l'avion est modifié.
+                </div>
+
+                <div class="info-box">
+                    <strong>Informations actuelles :</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>Avion actuel : <span th:text="${volDetail.avion != null ? volDetail.avion.modele : 'Non défini'}"></span></li>
+                        <li>Statut : <span th:text="${volDetail.statut}"></span></li>
+                        <li>Réservations : <span th:text="${volDetail.nombrePlacesReservees} + ' place(s) réservée(s)'"></span></li>
+                    </ul>
+                </div>
+
+                <form th:action="@{/vol/details/edit/{id}(id=${volDetail.idVolDetail})}" th:object="${volDetail}" method="post">
+
+                    <h3>Informations générales</h3>
+                    
+                    <div class="form-group">
+                        <label>Avion</label>
+                        <select th:field="*{avion.idAvion}" required>
+                            <option value="">Sélectionner un avion</option>
+                            <option th:each="av : ${avions}"
+                                    th:value="${av.idAvion}"
+                                    th:selected="${volDetail.avion != null && volDetail.avion.idAvion == av.idAvion}"
+                                    th:text="${av.modele} + ' (' + ${av.compagnie.nom} + ') - Capacité: ' + ${av.capaciteTotale}">
+                            </option>
+                        </select>
+                        <small style="color: #666;">La modification de l'avion peut affecter la disponibilité des places.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date / Heure départ</label>
+                        <input type="datetime-local" 
+                               name="dateHeureDepart" 
+                               th:value="${volDetail.dateHeureDepart != null ? #temporals.format(volDetail.dateHeureDepart, 'yyyy-MM-dd''T''HH:mm') : ''}" 
+                               required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date / Heure arrivée</label>
+                        <input type="datetime-local" 
+                               name="dateHeureArrivee" 
+                               th:value="${volDetail.dateHeureArrivee != null ? #temporals.format(volDetail.dateHeureArrivee, 'yyyy-MM-dd''T''HH:mm') : ''}" 
+                               required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <select th:field="*{statut}" required>
+                            <option value="">Sélectionner un statut</option>
+                            <option value="PROGRAMME" th:selected="${volDetail.statut == 'PROGRAMME'}">PROGRAMMÉ</option>
+                            <option value="CONFIRME" th:selected="${volDetail.statut == 'CONFIRME'}">CONFIRMÉ</option>
+                            <option value="ANNULE" th:selected="${volDetail.statut == 'ANNULE'}">ANNULÉ</option>
+                            <option value="TERMINE" th:selected="${volDetail.statut == 'TERMINE'}">TERMINÉ</option>
+                        </select>
+                    </div>
+
+                    <!-- Prix par classe -->
+                    <div class="price-matrix">
+                        <h3>Tarif par classe (MGA)</h3>
+                        <p style="color: #666; margin-bottom: 15px;">Modifiez les tarifs par défaut pour chaque classe. Les prix avec remise seront calculés automatiquement.</p>
+                        
+                        <div class="places-grid">
+                            <div th:each="classe : ${classes}" class="place-item">
+                                <label th:text="${classe.libelle} + ' (MGA)'">Classe</label>
+                                <input type="number" 
+                                       th:name="'prix_adulte_' + ${classe.idClasse}" 
+                                       th:value="${prixActuels[classe.idClasse] != null ? prixActuels[classe.idClasse] : 0}"
+                                       min="0" 
+                                       step="0.01"
+                                       required
+                                       placeholder="Tarif par défaut" />
+                            </div>
+                        </div>
+                        
+                        <!-- Afficher la grille des remises -->
+                        <div style="margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px;">
+                            <strong>Remises appliquées par classe et catégorie :</strong>
+                            <table style="width:100%; margin-top:10px; border-collapse:collapse; font-size:0.9em;">
+                                <thead>
+                                    <tr style="background:#e3f2fd;">
+                                        <th style="padding:8px; border:1px solid #ddd;">Catégorie</th>
+                                        <th th:each="classe : ${classes}" style="padding:8px; border:1px solid #ddd;" th:text="${classe.libelle}"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cat : ${categories}">
+                                        <td style="padding:8px; border:1px solid #ddd; font-weight:500;" th:text="${cat.libelle}"></td>
+                                        <td th:each="classe : ${classes}" style="padding:8px; border:1px solid #ddd; text-align:center;">
+                                            <span th:classappend="${matriceRemises[classe.idClasse][cat.idCategorie] > 0} ? 'color:#4caf50;font-weight:bold' : 'color:#999'"
+                                                  th:text="${matriceRemises[classe.idClasse][cat.idCategorie] > 0} ? (${#numbers.formatDecimal(matriceRemises[classe.idClasse][cat.idCategorie], 1, 0)} + '%') : 'Aucune'"></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <small style="color:#666; display:block; margin-top:8px;">
+                                <a href="/remises" style="color:#1976d2;">Gérer les remises</a>
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions" style="margin-top: 30px;">
+                        <button type="submit" class="btn btn-edit">Enregistrer les modifications</button>
+                        <a th:href="@{/vol/{id}/details(id=${vol.idVol})}" class="btn btn-secondary">Annuler</a>
+                    </div>
+
+                </form>
+            </article>
+        </section>
+
+        <footer class="main-footer">
+            <span>© 2026 Compagnie aérienne</span>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

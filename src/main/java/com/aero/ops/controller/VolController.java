@@ -26,6 +26,8 @@ public class VolController {
     private final CategorieAgeService categorieAgeService;
     private final PrixClasseService prixClasseService;
     private final RemiseClasseCategorieService remiseService;
+    private final ReservationService reservationService;
+    private final PaiementService paiementService;
 
     public VolController(VolService volService,
                          VolDetailService volDetailService,
@@ -35,7 +37,9 @@ public class VolController {
                          ClasseSiegeService classeSiegeService,
                          CategorieAgeService categorieAgeService,
                          PrixClasseService prixClasseService,
-                         RemiseClasseCategorieService remiseService) {
+                         RemiseClasseCategorieService remiseService,
+                         ReservationService reservationService,
+                         PaiementService paiementService) {
         this.volService = volService;
         this.volDetailService = volDetailService;
         this.compagnieService = compagnieService;
@@ -45,6 +49,8 @@ public class VolController {
         this.categorieAgeService = categorieAgeService;
         this.prixClasseService = prixClasseService;
         this.remiseService = remiseService;
+        this.reservationService = reservationService;
+        this.paiementService = paiementService;
     }
 
     // Liste des vols
@@ -216,6 +222,121 @@ public class VolController {
         }
         
         return "redirect:/vol/" + id + "/details";
+    }
+
+    // Formulaire de modification d'un VolDetail
+    @GetMapping("/details/edit/{id}")
+    public String editVolDetailForm(@PathVariable Long id, Model model) {
+        VolDetail volDetail = volDetailService.getById(id);
+        if (volDetail == null) {
+            return "redirect:/vol";
+        }
+        
+        Vol vol = volDetail.getVol();
+        List<ClasseSiege> classes = classeSiegeService.getAll();
+        List<CategorieAge> categories = categorieAgeService.getAll();
+        
+        // Récupérer les prix actuels par classe
+        Map<Long, BigDecimal> prixActuels = new HashMap<>();
+        for (ClasseSiege classe : classes) {
+            BigDecimal prix = prixClasseService.getPrixBase(id, classe.getIdClasse());
+            prixActuels.put(classe.getIdClasse(), prix);
+        }
+        
+        // Préparer la matrice de remises pour l'affichage
+        Map<Long, Map<Long, BigDecimal>> matriceRemises = new LinkedHashMap<>();
+        for (ClasseSiege classe : classes) {
+            Map<Long, BigDecimal> remisesCategorie = new LinkedHashMap<>();
+            for (CategorieAge categorie : categories) {
+                BigDecimal pourcentage = remiseService.getPourcentage(classe.getIdClasse(), categorie.getIdCategorie());
+                remisesCategorie.put(categorie.getIdCategorie(), pourcentage);
+            }
+            matriceRemises.put(classe.getIdClasse(), remisesCategorie);
+        }
+        
+        model.addAttribute("vol", vol);
+        model.addAttribute("volDetail", volDetail);
+        model.addAttribute("avions", avionService.getAll());
+        model.addAttribute("classes", classes);
+        model.addAttribute("categories", categories);
+        model.addAttribute("prixActuels", prixActuels);
+        model.addAttribute("matriceRemises", matriceRemises);
+        return "views/vol/edit-detail";
+    }
+
+    // Modifier un VolDetail avec mise à jour des prix et des paiements
+    @PostMapping("/details/edit/{id}")
+    @Transactional
+    public String updateVolDetail(@PathVariable Long id,
+                                  @ModelAttribute VolDetail volDetail,
+                                  @RequestParam Map<String, String> allParams) {
+        VolDetail existing = volDetailService.getById(id);
+        if (existing == null) {
+            return "redirect:/vol";
+        }
+        
+        Long volId = existing.getVol().getIdVol();
+        
+        // Mettre à jour les champs de base
+        existing.setDateHeureDepart(volDetail.getDateHeureDepart());
+        existing.setDateHeureArrivee(volDetail.getDateHeureArrivee());
+        existing.setStatut(volDetail.getStatut());
+        
+        // Résoudre et mettre à jour l'avion
+        if (volDetail.getAvion() != null && volDetail.getAvion().getIdAvion() != null) {
+            existing.setAvion(avionService.getById(volDetail.getAvion().getIdAvion()));
+        }
+        
+        // Sauvegarder les modifications du VolDetail
+        volDetailService.update(existing);
+        
+        // Mettre à jour les prix par classe et recalculer les paiements
+        for (ClasseSiege classe : classeSiegeService.getAll()) {
+            String prixBaseKey = "prix_adulte_" + classe.getIdClasse();
+            String prixBaseStr = allParams.get(prixBaseKey);
+            
+            if (prixBaseStr != null && !prixBaseStr.isBlank()) {
+                try {
+                    BigDecimal prixBase = new BigDecimal(prixBaseStr);
+                    if (prixBase.compareTo(BigDecimal.ZERO) >= 0) {
+                        // Vérifier si un prix existe déjà
+                        Optional<PrixClasse> existingPrix = prixClasseService.getByVolDetailAndClasse(id, classe.getIdClasse());
+                        if (existingPrix.isPresent()) {
+                            // Mettre à jour le prix existant
+                            PrixClasse pc = existingPrix.get();
+                            pc.setPrixBase(prixBase);
+                            prixClasseService.save(pc);
+                        } else {
+                            // Créer un nouveau prix
+                            PrixClasse pc = new PrixClasse();
+                            pc.setVolDetail(existing);
+                            pc.setClasseSiege(classe);
+                            pc.setPrixBase(prixBase);
+                            prixClasseService.save(pc);
+                        }
+                        
+                        // Mettre à jour les paiements des réservations pour cette classe
+                        List<Reservation> reservations = reservationService.getByVolDetailAndClasse(id, classe.getIdClasse());
+                        for (Reservation reservation : reservations) {
+                            // Ne mettre à jour que les réservations non annulées
+                            if (reservation.getStatut() != null && !reservation.getStatut().equals("ANNULE")) {
+                                // Recalculer le prix final avec la nouvelle base et la remise
+                                BigDecimal nouveauPrixFinal = reservationService.getPrixFinal(reservation);
+                                
+                                // Mettre à jour le paiement si existant
+                                if (reservation.getPaiement() != null) {
+                                    Paiement paiement = reservation.getPaiement();
+                                    paiement.setMontant(nouveauPrixFinal);
+                                    paiementService.update(paiement);
+                                }
+                            }
+                        }
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        
+        return "redirect:/vol/" + volId + "/details";
     }
 
     // Supprimer un VolDetail
