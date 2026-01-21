@@ -90,18 +90,12 @@
             </div>
         </div>
 
-        <!-- Onglets -->
-        <div class="page-tabs">
-            <a th:href="@{/chiffre-affaire}" class="active">CA Reel (Paye)</a>
-            <a th:href="@{/chiffre-affaire/previsionnel}">CA Previsionnel (Reservations)</a>
-        </div>
-
         <!-- Statistiques -->
         <section class="content-section">
             <div class="stats-grid">
                 <div class="stat-card success">
                     <h4>Total CA</h4>
-                    <div class="value" th:text="${#numbers.formatDecimal(total,0,0)} + ' MGA'">0 MGA</div>
+                    <div class="value" th:text="${#numbers.formatInteger(total, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
                 <div class="stat-card info">
                     <h4>Nb Paiements</h4>
@@ -109,7 +103,7 @@
                 </div>
                 <div class="stat-card warning">
                     <h4>Moyenne / Paiement</h4>
-                    <div class="value" th:text="${#numbers.formatDecimal(moyenne,0,0)} + ' MGA'">0 MGA</div>
+                    <div class="value" th:text="${#numbers.formatInteger(moyenne, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
             </div>
         </section>
@@ -184,6 +178,7 @@
                         <th>Compagnie</th>
                         <th>Client</th>
                         <th>Classe</th>
+                        <th>Catégorie</th>
                         <th>Montant</th>
                     </tr>
                     </thead>
@@ -196,10 +191,11 @@
                         <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.vol != null and p.reservation.volDetail.vol.compagnie != null ? p.reservation.volDetail.vol.compagnie.nom : '-'}"></td>
                         <td th:text="${p.reservation != null and p.reservation.utilisateur != null ? p.reservation.utilisateur.nom + ' ' + p.reservation.utilisateur.prenom : '-'}"></td>
                         <td th:text="${p.reservation != null and p.reservation.classeSiege != null ? p.reservation.classeSiege.libelle : '-'}"></td>
-                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatDecimal(p.montant,0,0)} + ' MGA'"></td>
+                        <td th:text="${p.reservation != null and p.reservation.categorieAge != null ? p.reservation.categorieAge.libelle : '-'}"></td>
+                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(p.montant, 1, 'WHITESPACE')} + ' MGA'"></td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(paiements)}">
-                        <td colspan="8" style="text-align:center;padding:20px;color:#999;">Aucun paiement trouve pour ces criteres.</td>
+                        <td colspan="9" style="text-align:center;padding:20px;color:#999;">Aucun paiement trouve pour ces criteres.</td>
                     </tr>
                     </tbody>
                 </table>

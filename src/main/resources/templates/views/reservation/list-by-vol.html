@@ -50,7 +50,7 @@
                         <td th:text="${#temporals.format(r.dateReservation,'yyyy-MM-dd HH:mm')}"></td>
                         <td th:text="${r.statut}"></td>
                         <td>
-                            <span th:if="${r.paiement != null}" th:text="${r.paiement.statut} + ' (' + ${r.paiement.montant} + ' EUR)'"></span>
+                            <span th:if="${r.paiement != null}" th:text="${r.paiement.statut} + ' (' + ${r.paiement.montant} + ' MGA)'"></span>
                             <span th:if="${r.paiement == null}">Aucun</span>
                         </td>
                         <td>
