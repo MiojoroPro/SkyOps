@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiements Diffusion | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        .stat-card.success .value { color: #4caf50; }
+        .stat-card.info .value { color: #2196f3; }
+        .stat-card.warning .value { color: #ff9800; }
+        .stat-card.danger .value { color: #f44336; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .info-box { background: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+        .info-box p { margin: 4px 0; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités > Paiements</p>
+                <h1>Paiements de la Diffusion #<span th:text="${diffusion.idDiffusion}"></span></h1>
+            </div>
+            <a th:href="@{/publicites/paiements/new/{id}(id=${diffusion.idDiffusion})}" 
+               class="btn btn-primary"
+               th:if="${diffusion.resteAPayer.compareTo(T(java.math.BigDecimal).ZERO) > 0}">+ Nouveau Paiement</a>
+        </div>
+
+        <!-- Informations de la diffusion -->
+        <div class="info-box">
+            <p><strong>Société :</strong> <span th:text="${diffusion.publicite?.societe?.nom ?: '-'}"></span></p>
+            <p><strong>Publicité :</strong> <span th:text="${diffusion.publicite?.titre ?: '-'}"></span></p>
+            <p><strong>Avion :</strong> <span th:text="${diffusion.avion?.modele ?: '-'}"></span></p>
+            <p><strong>Période :</strong> <span th:text="${diffusion.mois + '/' + diffusion.annee}"></span></p>
+            <p><strong>Nombre de diffusions :</strong> <span th:text="${diffusion.nombreDiffusions}"></span></p>
+        </div>
+
+        <!-- Statistiques -->
+        <section class="content-section">
+            <div class="stats-grid">
+                <div class="stat-card info">
+                    <h4>Montant Total</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(diffusion.montantTotal, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card success">
+                    <h4>Montant Payé</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(diffusion.montantPaye, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card" th:classappend="${diffusion.resteAPayer.compareTo(T(java.math.BigDecimal).ZERO) > 0} ? 'danger' : 'success'">
+                    <h4>Reste à Payer</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(diffusion.resteAPayer, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Statut</h4>
+                    <div class="value">
+                        <span th:if="${diffusion.statutPaiement == 'PAYE'}" class="badge badge-success">PAYÉ</span>
+                        <span th:if="${diffusion.statutPaiement == 'PARTIEL'}" class="badge badge-warning">PARTIEL</span>
+                        <span th:if="${diffusion.statutPaiement == 'NON_PAYE'}" class="badge badge-danger">NON PAYÉ</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tableau des paiements -->
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Historique des paiements</h3>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Référence</th>
+                        <th>Mode de paiement</th>
+                        <th>Montant</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${paiements}">
+                        <td th:text="${p.idPaiementPub}"></td>
+                        <td th:text="${#temporals.format(p.datePaiement, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td th:text="${p.reference ?: '-'}"></td>
+                        <td th:text="${p.modePaiement ?: '-'}"></td>
+                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(p.montant, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td>
+                            <a th:href="@{/publicites/paiements/delete/{id}(id=${p.idPaiementPub})}" 
+                               class="btn btn-sm btn-danger" 
+                               onclick="return confirm('Supprimer ce paiement ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(paiements)}">
+                        <td colspan="6" style="text-align:center;padding:20px;color:#999;">Aucun paiement enregistré.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 0 24px;">
+            <a href="/publicites/diffusions" class="btn btn-secondary">← Retour aux diffusions</a>
+        </div>
+    </main>
+</div>
+</body>
+</html>

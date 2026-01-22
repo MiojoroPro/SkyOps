@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouveau Paiement | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .info-box { background: #e3f2fd; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #1565c0; }
+        .info-box p { margin: 4px 0; }
+        .amount-info { background: #fff3e0; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités > Paiements</p>
+                <h1>Nouveau Paiement</h1>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <!-- Informations de la diffusion -->
+            <div class="info-box" style="margin: 24px;">
+                <p><strong>Société :</strong> <span th:text="${diffusion.publicite?.societe?.nom ?: '-'}"></span></p>
+                <p><strong>Publicité :</strong> <span th:text="${diffusion.publicite?.titre ?: '-'}"></span></p>
+                <p><strong>Période :</strong> <span th:text="${diffusion.mois + '/' + diffusion.annee}"></span></p>
+                <p><strong>Montant Total :</strong> <span th:text="${#numbers.formatInteger(diffusion.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></span></p>
+                <p><strong>Déjà Payé :</strong> <span th:text="${#numbers.formatInteger(diffusion.montantPaye, 1, 'WHITESPACE')} + ' Ar'"></span></p>
+                <p style="font-size: 1.2em; font-weight: bold; color: #f44336;"><strong>Reste à Payer :</strong> <span th:text="${#numbers.formatInteger(diffusion.resteAPayer, 1, 'WHITESPACE')} + ' Ar'"></span></p>
+            </div>
+
+            <form th:action="@{/publicites/paiements/save}" method="post" style="padding: 24px;">
+                <input type="hidden" name="diffusionId" th:value="${diffusion.idDiffusion}" />
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Montant à payer (Ar) *</label>
+                    <input type="number" name="montant" th:value="${paiement.montant}" required min="1" 
+                           th:max="${diffusion.resteAPayer}"
+                           style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                    <small style="color:#666;">Maximum : <span th:text="${#numbers.formatInteger(diffusion.resteAPayer, 1, 'WHITESPACE')}"></span> Ar</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Référence</label>
+                    <input type="text" name="reference" placeholder="Ex: REF-2025-001" 
+                           style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Mode de paiement</label>
+                    <select name="modePaiement" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="ESPECES">Espèces</option>
+                        <option value="VIREMENT">Virement bancaire</option>
+                        <option value="CHEQUE">Chèque</option>
+                        <option value="MOBILE_MONEY">Mobile Money</option>
+                        <option value="CARTE">Carte bancaire</option>
+                    </select>
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="btn btn-primary">Enregistrer le paiement</button>
+                    <a th:href="@{/publicites/paiements/diffusion/{id}(id=${diffusion.idDiffusion})}" class="btn btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

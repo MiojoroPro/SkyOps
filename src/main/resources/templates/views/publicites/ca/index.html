@@ -33,6 +33,11 @@
         .stat-card.info .value { color: #2196f3; }
         .stat-card.warning .value { color: #ff9800; }
         .stat-card.purple .value { color: #9c27b0; }
+        .stat-card.danger .value { color: #f44336; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
         .filter-form {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -108,13 +113,17 @@
                     <h4>Nb Diffusions</h4>
                     <div class="value" th:text="${totalDiffusions}">0</div>
                 </div>
+                <div class="stat-card success">
+                    <h4>Montant Payé</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalPaye != null ? totalPaye : 0, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card danger">
+                    <h4>Reste à Payer</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalResteAPayer != null ? totalResteAPayer : 0, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
                 <div class="stat-card warning">
                     <h4>Nb Sociétés</h4>
                     <div class="value" th:text="${nbSocietes}">0</div>
-                </div>
-                <div class="stat-card purple">
-                    <h4>Moyenne / Diffusion</h4>
-                    <div class="value" th:text="${#numbers.formatInteger(moyenneParDiffusion, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
                 </div>
             </div>
         </section>
@@ -182,9 +191,11 @@
                         <th>Publicité</th>
                         <th>Avion</th>
                         <th>Période</th>
-                        <th>Nb Diffusions</th>
-                        <th>Prix unitaire</th>
+                        <th>Nb Diff.</th>
                         <th>Montant</th>
+                        <th>Payé</th>
+                        <th>Reste</th>
+                        <th>Statut</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -209,19 +220,27 @@
                             </span> <span th:text="${d.annee}"></span>
                         </td>
                         <td th:text="${d.nombreDiffusions}"></td>
-                        <td th:text="${d.tarif != null ? #numbers.formatInteger(d.tarif.prixUnitaire, 1, 'WHITESPACE') + ' Ar' : '-'}"></td>
-                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(d.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="font-weight:bold;" th:text="${#numbers.formatInteger(d.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(d.montantPaye, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#f44336;font-weight:bold;" th:text="${#numbers.formatInteger(d.resteAPayer, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td>
+                            <span th:if="${d.statutPaiement == 'PAYE'}" class="badge badge-success">PAYÉ</span>
+                            <span th:if="${d.statutPaiement == 'PARTIEL'}" class="badge badge-warning">PARTIEL</span>
+                            <span th:if="${d.statutPaiement == 'NON_PAYE'}" class="badge badge-danger">NON PAYÉ</span>
+                        </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(diffusions)}">
-                        <td colspan="7" style="text-align:center;padding:20px;color:#999;">Aucune diffusion trouvée pour ces critères.</td>
+                        <td colspan="9" style="text-align:center;padding:20px;color:#999;">Aucune diffusion trouvée pour ces critères.</td>
                     </tr>
                     </tbody>
                     <tfoot th:if="${!#lists.isEmpty(diffusions)}">
                     <tr style="background:#f5f5f5;font-weight:bold;">
                         <td colspan="4">TOTAL</td>
                         <td th:text="${totalDiffusions}"></td>
+                        <td th:text="${#numbers.formatInteger(totalCA, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(totalPaye != null ? totalPaye : 0, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#f44336" th:text="${#numbers.formatInteger(totalResteAPayer != null ? totalResteAPayer : 0, 1, 'WHITESPACE')} + ' Ar'"></td>
                         <td>-</td>
-                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(totalCA, 1, 'WHITESPACE')} + ' Ar'"></td>
                     </tr>
                     </tfoot>
                 </table>

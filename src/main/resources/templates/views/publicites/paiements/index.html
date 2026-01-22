@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiements Publicitaires | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités</p>
+                <h1>Historique des Paiements</h1>
+                <p class="module-description">Tous les paiements de diffusions publicitaires.</p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Liste des paiements</h3>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Société</th>
+                        <th>Publicité</th>
+                        <th>Période</th>
+                        <th>Référence</th>
+                        <th>Mode</th>
+                        <th>Montant</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${paiements}">
+                        <td th:text="${p.idPaiementPub}"></td>
+                        <td th:text="${#temporals.format(p.datePaiement, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td th:text="${p.diffusion?.publicite?.societe?.nom ?: '-'}"></td>
+                        <td th:text="${p.diffusion?.publicite?.titre ?: '-'}"></td>
+                        <td th:text="${p.diffusion != null ? p.diffusion.mois + '/' + p.diffusion.annee : '-'}"></td>
+                        <td th:text="${p.reference ?: '-'}"></td>
+                        <td th:text="${p.modePaiement ?: '-'}"></td>
+                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(p.montant, 1, 'WHITESPACE')} + ' Ar'"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(paiements)}">
+                        <td colspan="8" style="text-align:center;padding:20px;color:#999;">Aucun paiement trouvé.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
