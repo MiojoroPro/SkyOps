@@ -32,6 +32,13 @@
         .stat-card.success .value { color: #4caf50; }
         .stat-card.info .value { color: #2196f3; }
         .stat-card.warning .value { color: #ff9800; }
+        .stat-card.danger .value { color: #f44336; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .btn-pay { background: #ff9800; color: white; }
+        .btn-pay:hover { background: #f57c00; }
         .filter-form {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -65,12 +72,16 @@
                     <div class="value" th:text="${#numbers.formatInteger(totalCA, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
                 </div>
                 <div class="stat-card info">
-                    <h4>Nb Diffusions</h4>
-                    <div class="value" th:text="${totalDiffusions}">0</div>
+                    <h4>Montant Payé</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalPaye != null ? totalPaye : 0, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card danger">
+                    <h4>Reste à Payer</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalRestant != null ? totalRestant : 0, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
                 </div>
                 <div class="stat-card warning">
-                    <h4>Nb Sociétés</h4>
-                    <div class="value" th:text="${nbSocietes}">0</div>
+                    <h4>Nb Diffusions</h4>
+                    <div class="value" th:text="${totalDiffusions}">0</div>
                 </div>
             </div>
         </section>
@@ -138,10 +149,12 @@
                         <th>Publicité</th>
                         <th>Société</th>
                         <th>Avion</th>
-                        <th>Mois/Année</th>
-                        <th>Nb Diffusions</th>
-                        <th>Prix unitaire</th>
+                        <th>Période</th>
+                        <th>Nb Diff.</th>
                         <th>Montant Total</th>
+                        <th>Payé</th>
+                        <th>Reste</th>
+                        <th>Statut</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -153,15 +166,22 @@
                         <td th:text="${d.avion != null ? d.avion.modele : '-'}"></td>
                         <td th:text="${d.mois + '/' + d.annee}"></td>
                         <td th:text="${d.nombreDiffusions}"></td>
-                        <td th:text="${d.tarif != null ? #numbers.formatInteger(d.tarif.prixUnitaire, 1, 'WHITESPACE') + ' Ar' : '-'}"></td>
-                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(d.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="font-weight:bold;" th:text="${#numbers.formatInteger(d.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(d.montantPaye, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#f44336;font-weight:bold;" th:text="${#numbers.formatInteger(d.resteAPayer, 1, 'WHITESPACE')} + ' Ar'"></td>
                         <td>
-                            <a th:href="@{/publicites/diffusions/edit/{id}(id=${d.idDiffusion})}" class="btn btn-sm">Modifier</a>
-                            <a th:href="@{/publicites/diffusions/delete/{id}(id=${d.idDiffusion})}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ?')">Supprimer</a>
+                            <span th:if="${d.statutPaiement == 'PAYE'}" class="badge badge-success">PAYÉ</span>
+                            <span th:if="${d.statutPaiement == 'PARTIEL'}" class="badge badge-warning">PARTIEL</span>
+                            <span th:if="${d.statutPaiement == 'NON_PAYE'}" class="badge badge-danger">NON PAYÉ</span>
+                        </td>
+                        <td style="white-space: nowrap;">
+                            <a th:href="@{/publicites/paiements/diffusion/{id}(id=${d.idDiffusion})}" class="btn btn-sm btn-pay" title="Voir paiements">💰</a>
+                            <a th:href="@{/publicites/diffusions/edit/{id}(id=${d.idDiffusion})}" class="btn btn-sm">✏️</a>
+                            <a th:href="@{/publicites/diffusions/delete/{id}(id=${d.idDiffusion})}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ?')">🗑️</a>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(diffusions)}">
-                        <td colspan="9" style="text-align:center;padding:20px;color:#999;">Aucune diffusion trouvée.</td>
+                        <td colspan="11" style="text-align:center;padding:20px;color:#999;">Aucune diffusion trouvée.</td>
                     </tr>
                     </tbody>
                 </table>

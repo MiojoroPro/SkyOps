@@ -1,11 +1,13 @@
 package com.aero.ops.controller;
 
 import com.aero.ops.model.DiffusionPublicitaire;
+import com.aero.ops.model.PaiementPublicitaire;
 import com.aero.ops.model.Publicite;
 import com.aero.ops.model.SocieteAnnonceur;
 import com.aero.ops.model.TarifPublicitaire;
 import com.aero.ops.service.AvionService;
 import com.aero.ops.service.DiffusionPublicitaireService;
+import com.aero.ops.service.PaiementPublicitaireService;
 import com.aero.ops.service.PubliciteService;
 import com.aero.ops.service.SocieteAnnonceurService;
 import com.aero.ops.service.TarifPublicitaireService;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,17 +30,20 @@ public class PubliciteController {
     private final TarifPublicitaireService tarifPublicitaireService;
     private final DiffusionPublicitaireService diffusionPublicitaireService;
     private final AvionService avionService;
+    private final PaiementPublicitaireService paiementPublicitaireService;
 
     public PubliciteController(SocieteAnnonceurService societeAnnonceurService,
                                PubliciteService publiciteService,
                                TarifPublicitaireService tarifPublicitaireService,
                                DiffusionPublicitaireService diffusionPublicitaireService,
-                               AvionService avionService) {
+                               AvionService avionService,
+                               PaiementPublicitaireService paiementPublicitaireService) {
         this.societeAnnonceurService = societeAnnonceurService;
         this.publiciteService = publiciteService;
         this.tarifPublicitaireService = tarifPublicitaireService;
         this.diffusionPublicitaireService = diffusionPublicitaireService;
         this.avionService = avionService;
+        this.paiementPublicitaireService = paiementPublicitaireService;
     }
 
     // ==================== SOCIETES ANNONCEURS ====================
@@ -199,6 +205,19 @@ public class PubliciteController {
         model.addAttribute("selectedAvion", avionId);
         model.addAttribute("totalCA", totalCA);
         model.addAttribute("totalDiffusions", totalDiffusions);
+        
+        // Calcul du montant total payé
+        BigDecimal totalPaye = diffusions.stream()
+                .map(DiffusionPublicitaire::getMontantPaye)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Calcul du reste à payer
+        BigDecimal totalRestant = diffusions.stream()
+                .map(DiffusionPublicitaire::getResteAPayer)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        model.addAttribute("totalPaye", totalPaye);
+        model.addAttribute("totalRestant", totalRestant);
         model.addAttribute("nbSocietes", diffusions.stream()
                 .filter(d -> d.getPublicite() != null && d.getPublicite().getSociete() != null)
                 .map(d -> d.getPublicite().getSociete().getIdSociete())
@@ -290,6 +309,16 @@ public class PubliciteController {
                 .map(DiffusionPublicitaire::getMontantTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // Calcul du total payé
+        BigDecimal totalPaye = diffusions.stream()
+                .map(DiffusionPublicitaire::getMontantPaye)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Calcul du reste à payer
+        BigDecimal totalResteAPayer = diffusions.stream()
+                .map(DiffusionPublicitaire::getResteAPayer)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         // Calcul du nombre total de diffusions
         int totalDiffusions = diffusions.stream()
                 .mapToInt(DiffusionPublicitaire::getNombreDiffusions)
@@ -308,6 +337,8 @@ public class PubliciteController {
         model.addAttribute("selectedSociete", societeId);
         model.addAttribute("selectedAvion", avionId);
         model.addAttribute("totalCA", totalCA);
+        model.addAttribute("totalPaye", totalPaye);
+        model.addAttribute("totalResteAPayer", totalResteAPayer);
         model.addAttribute("totalDiffusions", totalDiffusions);
         model.addAttribute("moyenneParDiffusion", moyenneParDiffusion);
         model.addAttribute("nbSocietes", diffusions.stream()
@@ -317,5 +348,49 @@ public class PubliciteController {
                 .count());
 
         return "views/publicites/ca/index";
+    }
+
+    // ==================== PAIEMENTS PUBLICITAIRES ====================
+
+    @GetMapping("/paiements")
+    public String listPaiements(Model model) {
+        model.addAttribute("paiements", paiementPublicitaireService.getAll());
+        return "views/publicites/paiements/index";
+    }
+
+    @GetMapping("/paiements/diffusion/{id}")
+    public String paiementsDiffusion(@PathVariable Long id, Model model) {
+        DiffusionPublicitaire diffusion = diffusionPublicitaireService.getById(id);
+        model.addAttribute("diffusion", diffusion);
+        model.addAttribute("paiements", paiementPublicitaireService.getByDiffusion(id));
+        return "views/publicites/paiements/diffusion";
+    }
+
+    @GetMapping("/paiements/new/{idDiffusion}")
+    public String newPaiement(@PathVariable Long idDiffusion, Model model) {
+        DiffusionPublicitaire diffusion = diffusionPublicitaireService.getById(idDiffusion);
+        PaiementPublicitaire paiement = new PaiementPublicitaire();
+        paiement.setDiffusion(diffusion);
+        paiement.setMontant(diffusion.getResteAPayer()); // Pré-remplir avec le reste à payer
+        model.addAttribute("paiement", paiement);
+        model.addAttribute("diffusion", diffusion);
+        return "views/publicites/paiements/form";
+    }
+
+    @PostMapping("/paiements/save")
+    public String savePaiement(@ModelAttribute PaiementPublicitaire paiement,
+                               @RequestParam Long diffusionId) {
+        paiement.setDiffusion(diffusionPublicitaireService.getById(diffusionId));
+        paiement.setDatePaiement(LocalDateTime.now());
+        paiementPublicitaireService.create(paiement);
+        return "redirect:/publicites/paiements/diffusion/" + diffusionId;
+    }
+
+    @GetMapping("/paiements/delete/{id}")
+    public String deletePaiement(@PathVariable Long id) {
+        PaiementPublicitaire paiement = paiementPublicitaireService.getById(id);
+        Long diffusionId = paiement.getDiffusion().getIdDiffusion();
+        paiementPublicitaireService.delete(id);
+        return "redirect:/publicites/paiements/diffusion/" + diffusionId;
     }
 }
