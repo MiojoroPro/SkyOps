@@ -19,13 +19,55 @@
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/reservations')} ? ' is-active' : ''">Reservations</a>
         <a class="menu-link" href="/chiffre-affaire"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/chiffre-affaire')} ? ' is-active' : ''">CA</a>
-        <hr style="border:none;border-top:1px solid #444;margin:10px 0;" />
+        <hr style="border:none;border-top:1px solid var(--border-light);margin:10px 0;" />
         <a class="menu-link" href="/classes"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/classes')} ? ' is-active' : ''">Classes Siege</a>
         <a class="menu-link" href="/categories"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/categories')} ? ' is-active' : ''">Categories Age</a>
         <a class="menu-link" href="/remises"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/remises')} ? ' is-active' : ''">Grille Tarifaire</a>
+        <hr style="border:none;border-top:1px solid var(--border-light);margin:10px 0;" />
+        <a class="menu-link" href="/publicites/societes"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/societes')} ? ' is-active' : ''">Annonceurs</a>
+        <a class="menu-link" href="/publicites"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites') and !#strings.contains(#httpServletRequest.requestURI, '/societes') and !#strings.contains(#httpServletRequest.requestURI, '/tarifs') and !#strings.contains(#httpServletRequest.requestURI, '/diffusions') and !#strings.contains(#httpServletRequest.requestURI, '/ca')} ? ' is-active' : ''">Publicités</a>
+        <a class="menu-link" href="/publicites/tarifs"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/tarifs')} ? ' is-active' : ''">Tarifs Pub</a>
+        <a class="menu-link" href="/publicites/diffusions"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/diffusions')} ? ' is-active' : ''">Diffusions</a>
+        <a class="menu-link" href="/publicites/ca"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/ca')} ? ' is-active' : ''">CA Publicités</a>
+        <hr style="border:none;border-top:1px solid var(--border-light);margin:10px 0;" />
+        <!--<button class="theme-toggle" onclick="toggleTheme()" title="Basculer le thème">
+            <span class="icon moon-icon">🌙</span>
+            <span class="icon sun-icon">☀️</span>
+            <span class="theme-label">Mode Nuit</span>
+        </button>-->
         <a class="menu-link logout" href="/logout">Deconnexion</a>
     </nav>
 </aside>
+
+<script th:inline="javascript">
+    // Initialiser le thème au chargement
+    (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeLabel(savedTheme);
+    })();
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeLabel(newTheme);
+    }
+
+    function updateThemeLabel(theme) {
+        const label = document.querySelector('.theme-label');
+        if (label) {
+            label.textContent = theme === 'dark' ? 'Mode Jour' : 'Mode Nuit';
+        }
+    }
+</script>

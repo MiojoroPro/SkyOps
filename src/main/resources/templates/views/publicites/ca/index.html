@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CA Publicités | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        .stat-card.success .value { color: #4caf50; }
+        .stat-card.info .value { color: #2196f3; }
+        .stat-card.warning .value { color: #ff9800; }
+        .stat-card.purple .value { color: #9c27b0; }
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 16px 24px;
+        }
+        .filter-form .form-group { margin: 0; }
+        .filter-form label { display: block; font-size: 0.85em; margin-bottom: 4px; color: #555; }
+        .filter-form select, .filter-form input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .filter-actions { display: flex; gap: 10px; align-items: end; padding-bottom: 2px; }
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .highlight-box h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .highlight-box .big-value {
+            font-size: 3em;
+            font-weight: bold;
+        }
+        .highlight-box .description {
+            margin-top: 8px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Rapports</p>
+                <h1>CA Vidéos Publicitaires</h1>
+                <p class="module-description">Analysez le chiffre d'affaires des diffusions publicitaires.</p>
+            </div>
+        </div>
+
+        <!-- Résumé principal -->
+        <section class="content-section">
+            <div class="highlight-box">
+                <h2>Chiffre d'Affaires Total</h2>
+                <div class="big-value" th:text="${#numbers.formatInteger(totalCA, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                <div class="description">
+                    <span th:if="${selectedMois != null and selectedAnnee != null}">
+                        Pour <span th:switch="${selectedMois}">
+                            <span th:case="1">Janvier</span>
+                            <span th:case="2">Février</span>
+                            <span th:case="3">Mars</span>
+                            <span th:case="4">Avril</span>
+                            <span th:case="5">Mai</span>
+                            <span th:case="6">Juin</span>
+                            <span th:case="7">Juillet</span>
+                            <span th:case="8">Août</span>
+                            <span th:case="9">Septembre</span>
+                            <span th:case="10">Octobre</span>
+                            <span th:case="11">Novembre</span>
+                            <span th:case="12">Décembre</span>
+                        </span> <span th:text="${selectedAnnee}"></span>
+                    </span>
+                    <span th:if="${selectedMois == null or selectedAnnee == null}">Toutes périodes confondues</span>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card info">
+                    <h4>Nb Diffusions</h4>
+                    <div class="value" th:text="${totalDiffusions}">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <h4>Nb Sociétés</h4>
+                    <div class="value" th:text="${nbSocietes}">0</div>
+                </div>
+                <div class="stat-card purple">
+                    <h4>Moyenne / Diffusion</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(moyenneParDiffusion, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filtres -->
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Filtres</h3>
+            </header>
+            <form th:action="@{/publicites/ca}" method="get" class="filter-form">
+                <div class="form-group">
+                    <label>Société</label>
+                    <select name="societeId">
+                        <option value="">Toutes</option>
+                        <option th:each="s : ${societes}" th:value="${s.idSociete}" th:text="${s.nom}" th:selected="${s.idSociete == selectedSociete}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mois</label>
+                    <select name="mois">
+                        <option value="">Tous</option>
+                        <option value="1" th:selected="${selectedMois == 1}">Janvier</option>
+                        <option value="2" th:selected="${selectedMois == 2}">Février</option>
+                        <option value="3" th:selected="${selectedMois == 3}">Mars</option>
+                        <option value="4" th:selected="${selectedMois == 4}">Avril</option>
+                        <option value="5" th:selected="${selectedMois == 5}">Mai</option>
+                        <option value="6" th:selected="${selectedMois == 6}">Juin</option>
+                        <option value="7" th:selected="${selectedMois == 7}">Juillet</option>
+                        <option value="8" th:selected="${selectedMois == 8}">Août</option>
+                        <option value="9" th:selected="${selectedMois == 9}">Septembre</option>
+                        <option value="10" th:selected="${selectedMois == 10}">Octobre</option>
+                        <option value="11" th:selected="${selectedMois == 11}">Novembre</option>
+                        <option value="12" th:selected="${selectedMois == 12}">Décembre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Année</label>
+                    <input type="number" name="annee" th:value="${selectedAnnee}" placeholder="2025" min="2020" max="2030" />
+                </div>
+                <div class="form-group">
+                    <label>Avion</label>
+                    <select name="avionId">
+                        <option value="">Tous</option>
+                        <option th:each="a : ${avions}" th:value="${a.idAvion}" th:text="${a.modele + ' (' + (a.compagnie != null ? a.compagnie.nom : '') + ')'}" th:selected="${a.idAvion == selectedAvion}"></option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-apply">Appliquer</button>
+                    <a href="/publicites/ca" class="btn btn-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tableau détaillé -->
+        <div class="table-wrapper" style="margin-top: 20px;">
+            <header>
+                <h3 class="section-title">Détails des diffusions</h3>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Société</th>
+                        <th>Publicité</th>
+                        <th>Avion</th>
+                        <th>Période</th>
+                        <th>Nb Diffusions</th>
+                        <th>Prix unitaire</th>
+                        <th>Montant</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="d : ${diffusions}">
+                        <td th:text="${d.publicite != null and d.publicite.societe != null ? d.publicite.societe.nom : '-'}"></td>
+                        <td th:text="${d.publicite != null ? d.publicite.titre : '-'}"></td>
+                        <td th:text="${d.avion != null ? d.avion.modele : '-'}"></td>
+                        <td>
+                            <span th:switch="${d.mois}">
+                                <span th:case="1">Janvier</span>
+                                <span th:case="2">Février</span>
+                                <span th:case="3">Mars</span>
+                                <span th:case="4">Avril</span>
+                                <span th:case="5">Mai</span>
+                                <span th:case="6">Juin</span>
+                                <span th:case="7">Juillet</span>
+                                <span th:case="8">Août</span>
+                                <span th:case="9">Septembre</span>
+                                <span th:case="10">Octobre</span>
+                                <span th:case="11">Novembre</span>
+                                <span th:case="12">Décembre</span>
+                            </span> <span th:text="${d.annee}"></span>
+                        </td>
+                        <td th:text="${d.nombreDiffusions}"></td>
+                        <td th:text="${d.tarif != null ? #numbers.formatInteger(d.tarif.prixUnitaire, 1, 'WHITESPACE') + ' Ar' : '-'}"></td>
+                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(d.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(diffusions)}">
+                        <td colspan="7" style="text-align:center;padding:20px;color:#999;">Aucune diffusion trouvée pour ces critères.</td>
+                    </tr>
+                    </tbody>
+                    <tfoot th:if="${!#lists.isEmpty(diffusions)}">
+                    <tr style="background:#f5f5f5;font-weight:bold;">
+                        <td colspan="4">TOTAL</td>
+                        <td th:text="${totalDiffusions}"></td>
+                        <td>-</td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(totalCA, 1, 'WHITESPACE')} + ' Ar'"></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

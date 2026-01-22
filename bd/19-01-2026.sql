@@ -224,3 +224,57 @@ CREATE TABLE paiement (
         FOREIGN KEY (id_reservation)
         REFERENCES reservation(id_reservation)
 );
+
+
+CREATE TABLE societe_annonceur (
+    id_societe SERIAL PRIMARY KEY,
+    nom VARCHAR(150) NOT NULL,
+    email VARCHAR(150),
+    telephone VARCHAR(30)
+);
+
+
+CREATE TABLE publicite (
+    id_publicite SERIAL PRIMARY KEY,
+    titre VARCHAR(150) NOT NULL,
+    duree_seconde INT NOT NULL,
+    description TEXT,
+
+    id_societe INT NOT NULL,
+
+    CONSTRAINT fk_publicite_societe
+        FOREIGN KEY (id_societe)
+        REFERENCES societe_annonceur(id_societe)
+);
+
+CREATE TABLE tarif_publicitaire (
+    id_tarif SERIAL PRIMARY KEY,
+    prix_unitaire DECIMAL(10,2) NOT NULL,
+    date_debut DATE NOT NULL,
+    date_fin DATE
+);
+
+CREATE TABLE diffusion_publicitaire (
+    id_diffusion SERIAL PRIMARY KEY,
+    mois INT NOT NULL,
+    annee INT NOT NULL,
+    nombre_diffusions INT NOT NULL CHECK (nombre_diffusions > 0),
+
+    id_publicite INT NOT NULL,
+    id_tarif INT NOT NULL,
+    id_avion INT NOT NULL,
+
+    CONSTRAINT fk_diffusion_publicite
+        FOREIGN KEY (id_publicite)
+        REFERENCES publicite(id_publicite),
+
+    CONSTRAINT fk_diffusion_tarif
+        FOREIGN KEY (id_tarif)
+        REFERENCES tarif_publicitaire(id_tarif),
+
+    CONSTRAINT fk_diffusion_avion
+        FOREIGN KEY (id_avion)
+        REFERENCES avion(id_avion),
+
+    CONSTRAINT chk_mois CHECK (mois BETWEEN 1 AND 12)
+);

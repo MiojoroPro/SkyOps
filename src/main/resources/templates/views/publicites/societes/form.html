@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Société Annonceur | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités</p>
+                <h1 th:text="${societe.idSociete != null} ? 'Modifier la société' : 'Nouvelle société'">Société</h1>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <form th:action="@{/publicites/societes/save}" method="post" style="padding: 24px;">
+                <input type="hidden" th:value="${societe.idSociete}" name="idSociete" />
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Nom *</label>
+                    <input type="text" name="nom" th:value="${societe.nom}" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Email</label>
+                    <input type="email" name="email" th:value="${societe.email}" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Téléphone</label>
+                    <input type="text" name="telephone" th:value="${societe.telephone}" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <a href="/publicites/societes" class="btn btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

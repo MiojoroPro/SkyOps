@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publicités | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités</p>
+                <h1>Vidéos Publicitaires</h1>
+                <p class="module-description">Gérez les vidéos publicitaires diffusées sur les écrans des avions.</p>
+            </div>
+            <a href="/publicites/new" class="btn btn-primary">+ Nouvelle publicité</a>
+        </div>
+
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Liste des publicités</h3>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Titre</th>
+                        <th>Société</th>
+                        <th>Durée (sec)</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${publicites}">
+                        <td th:text="${p.idPublicite}"></td>
+                        <td th:text="${p.titre}"></td>
+                        <td th:text="${p.societe != null ? p.societe.nom : '-'}"></td>
+                        <td th:text="${p.dureeSeconde}"></td>
+                        <td th:text="${p.description != null ? (#strings.abbreviate(p.description, 50)) : '-'}"></td>
+                        <td>
+                            <a th:href="@{/publicites/edit/{id}(id=${p.idPublicite})}" class="btn btn-sm">Modifier</a>
+                            <a th:href="@{/publicites/delete/{id}(id=${p.idPublicite})}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer cette publicité ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(publicites)}">
+                        <td colspan="6" style="text-align:center;padding:20px;color:#999;">Aucune publicité trouvée.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

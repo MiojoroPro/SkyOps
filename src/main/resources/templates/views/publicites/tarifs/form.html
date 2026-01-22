@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarif Publicitaire | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités</p>
+                <h1 th:text="${tarif.idTarif != null} ? 'Modifier le tarif' : 'Nouveau tarif'">Tarif</h1>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <form th:action="@{/publicites/tarifs/save}" method="post" style="padding: 24px;">
+                <input type="hidden" th:value="${tarif.idTarif}" name="idTarif" />
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Prix unitaire (Ar) *</label>
+                    <input type="number" name="prixUnitaire" th:value="${tarif.prixUnitaire}" required min="0" step="0.01" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Date début *</label>
+                    <input type="date" name="dateDebut" th:value="${tarif.dateDebut}" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Date fin (laisser vide si indéfinie)</label>
+                    <input type="date" name="dateFin" th:value="${tarif.dateFin}" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <a href="/publicites/tarifs" class="btn btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

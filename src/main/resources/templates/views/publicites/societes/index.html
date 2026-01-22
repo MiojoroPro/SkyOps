@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sociétés Annonceurs | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités</p>
+                <h1>Sociétés Annonceurs</h1>
+                <p class="module-description">Gérez les sociétés qui diffusent des publicités.</p>
+            </div>
+            <a href="/publicites/societes/new" class="btn btn-primary">+ Nouvelle société</a>
+        </div>
+
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Liste des sociétés</h3>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${societes}">
+                        <td th:text="${s.idSociete}"></td>
+                        <td th:text="${s.nom}"></td>
+                        <td th:text="${s.email ?: '-'}"></td>
+                        <td th:text="${s.telephone ?: '-'}"></td>
+                        <td>
+                            <a th:href="@{/publicites/societes/edit/{id}(id=${s.idSociete})}" class="btn btn-sm">Modifier</a>
+                            <a th:href="@{/publicites/societes/delete/{id}(id=${s.idSociete})}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer cette société ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(societes)}">
+                        <td colspan="5" style="text-align:center;padding:20px;color:#999;">Aucune société trouvée.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

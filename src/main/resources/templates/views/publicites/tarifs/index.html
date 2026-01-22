@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarifs Publicitaires | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités</p>
+                <h1>Tarifs Publicitaires</h1>
+                <p class="module-description">Définissez les tarifs par diffusion.</p>
+            </div>
+            <a href="/publicites/tarifs/new" class="btn btn-primary">+ Nouveau tarif</a>
+        </div>
+
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Liste des tarifs</h3>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Prix unitaire</th>
+                        <th>Date début</th>
+                        <th>Date fin</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t : ${tarifs}">
+                        <td th:text="${t.idTarif}"></td>
+                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(t.prixUnitaire, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td th:text="${#temporals.format(t.dateDebut, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${t.dateFin != null ? #temporals.format(t.dateFin, 'dd/MM/yyyy') : 'Indéfinie'}"></td>
+                        <td>
+                            <span th:if="${t.dateFin == null or t.dateFin.isAfter(#temporals.createToday())}" class="badge badge-success">Actif</span>
+                            <span th:unless="${t.dateFin == null or t.dateFin.isAfter(#temporals.createToday())}" class="badge badge-secondary">Expiré</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/publicites/tarifs/edit/{id}(id=${t.idTarif})}" class="btn btn-sm">Modifier</a>
+                            <a th:href="@{/publicites/tarifs/delete/{id}(id=${t.idTarif})}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ce tarif ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(tarifs)}">
+                        <td colspan="6" style="text-align:center;padding:20px;color:#999;">Aucun tarif trouvé.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

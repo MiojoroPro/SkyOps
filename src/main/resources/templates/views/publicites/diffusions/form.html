@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diffusion Publicitaire | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités</p>
+                <h1 th:text="${diffusion.idDiffusion != null} ? 'Modifier la diffusion' : 'Nouvelle diffusion'">Diffusion</h1>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <form th:action="@{/publicites/diffusions/save}" method="post" style="padding: 24px;">
+                <input type="hidden" th:value="${diffusion.idDiffusion}" name="idDiffusion" />
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Publicité *</label>
+                    <select name="publiciteId" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                        <option value="">-- Sélectionner --</option>
+                        <option th:each="p : ${publicites}" th:value="${p.idPublicite}" 
+                                th:text="${p.titre + ' (' + (p.societe != null ? p.societe.nom : '') + ')'}" 
+                                th:selected="${diffusion.publicite != null and diffusion.publicite.idPublicite == p.idPublicite}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Tarif *</label>
+                    <select name="tarifId" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                        <option value="">-- Sélectionner --</option>
+                        <option th:each="t : ${tarifs}" th:value="${t.idTarif}" 
+                                th:text="${#numbers.formatInteger(t.prixUnitaire, 1, 'WHITESPACE')} + ' Ar/diffusion (depuis ' + ${#temporals.format(t.dateDebut, 'dd/MM/yyyy')} + ')'" 
+                                th:selected="${diffusion.tarif != null and diffusion.tarif.idTarif == t.idTarif}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Avion *</label>
+                    <select name="avionId" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                        <option value="">-- Sélectionner --</option>
+                        <option th:each="a : ${avions}" th:value="${a.idAvion}" 
+                                th:text="${a.modele + ' (' + (a.compagnie != null ? a.compagnie.nom : '') + ')' }" 
+                                th:selected="${diffusion.avion != null and diffusion.avion.idAvion == a.idAvion}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Mois *</label>
+                    <select name="mois" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                        <option value="1" th:selected="${diffusion.mois == 1}">Janvier</option>
+                        <option value="2" th:selected="${diffusion.mois == 2}">Février</option>
+                        <option value="3" th:selected="${diffusion.mois == 3}">Mars</option>
+                        <option value="4" th:selected="${diffusion.mois == 4}">Avril</option>
+                        <option value="5" th:selected="${diffusion.mois == 5}">Mai</option>
+                        <option value="6" th:selected="${diffusion.mois == 6}">Juin</option>
+                        <option value="7" th:selected="${diffusion.mois == 7}">Juillet</option>
+                        <option value="8" th:selected="${diffusion.mois == 8}">Août</option>
+                        <option value="9" th:selected="${diffusion.mois == 9}">Septembre</option>
+                        <option value="10" th:selected="${diffusion.mois == 10}">Octobre</option>
+                        <option value="11" th:selected="${diffusion.mois == 11}">Novembre</option>
+                        <option value="12" th:selected="${diffusion.mois == 12}">Décembre</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Année *</label>
+                    <input type="number" name="annee" th:value="${diffusion.annee ?: 2025}" required min="2020" max="2030" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Nombre de diffusions *</label>
+                    <input type="number" name="nombreDiffusions" th:value="${diffusion.nombreDiffusions}" required min="1" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <a href="/publicites/diffusions" class="btn btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>
