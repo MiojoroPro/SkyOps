@@ -67,7 +67,7 @@ INSERT INTO aeroport (nom, ville, pays, code_iata) VALUES
 -- AVION (sans colonnes capacite)
 -- =========================
 INSERT INTO avion (modele, statut, id_compagnie) VALUES
-('Airbus A320', 'DISPONIBLE', 1),
+('ATR 045', 'DISPONIBLE', 1);
 ('Boeing 737', 'DISPONIBLE', 1),
 ('Airbus A350', 'DISPONIBLE', 2),
 ('ATR 72', 'DISPONIBLE', 1),

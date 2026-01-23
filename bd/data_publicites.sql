@@ -7,10 +7,18 @@ INSERT INTO societe_annonceur (nom, email, telephone) VALUES
 ('Vaniala', 'contact@vaniala.mg', '+261 34 00 000 01'),
 ('Lewis', 'info@lewis.mg', '+261 34 00 000 02');
 
+INSERT INTO societe_annonceur (nom, email, telephone) VALUES 
+('Socobis', 'info@socobis.mg', '+261 34 10 020 02');
+
+INSERT INTO societe_annonceur (nom, email, telephone) VALUES 
+('Jejoo', 'info@jejooo.mg', '+261 14 19 120 32');
+
 -- Publicités
 INSERT INTO publicite (titre, duree_seconde, description, id_societe) VALUES 
 ('Vaniala - Parfum Naturel', 30, 'Publicité pour les parfums naturels Vaniala', 1),
-('Lewis - Mode Homme', 45, 'Collection automne-hiver Lewis', 2);
+('Lewis - Mode Homme', 45, 'Collection automne-hiver Lewis', 2),
+('Jejoo - Jejoo', 45, 'Manja', 4),
+('Socobis - Gasy Ka Tsara', 45, '18 Petit Beure ', 3);
 
 -- Tarif publicitaire: 400 000 Ar / diffusion
 INSERT INTO tarif_publicitaire (prix_unitaire, date_debut, date_fin) VALUES 
