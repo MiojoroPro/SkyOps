@@ -99,7 +99,7 @@
         <section class="content-section">
             <div class="stats-grid">
                 <div class="stat-card success">
-                    <h4>CA Total</h4>
+                    <h4>CA Total (Encaissé)</h4>
                     <div class="value" th:text="${#numbers.formatInteger(totalGlobal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
                 <div class="stat-card info">
@@ -107,12 +107,16 @@
                     <div class="value" th:text="${#numbers.formatInteger(totalTickets, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
                 <div class="stat-card purple">
-                    <h4>CA Publicités</h4>
-                    <div class="value" th:text="${#numbers.formatInteger(totalPublicites, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
+                    <h4>Pub Payé</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalPubPaye, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
                 <div class="stat-card warning">
-                    <h4>Nb Paiements</h4>
-                    <div class="value" th:text="${nbPaiements}">0</div>
+                    <h4>Pub Restant</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalPubRestant, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
+                </div>
+                <div class="stat-card" style="border-left: 4px solid #607d8b;">
+                    <h4>CA Potentiel (si tout payé)</h4>
+                    <div class="value" style="color:#607d8b" th:text="${#numbers.formatInteger(totalCaPotentiel, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
             </div>
         </section>
@@ -172,8 +176,11 @@
                         <th>Date Départ</th>
                         <th>Heure Départ</th>
                         <th>Montant Tickets</th>
-                        <th>Montant Publicités</th>
-                        <th>Total CA</th>
+                        <th>Pub Total</th>
+                        <th>Pub Payé</th>
+                        <th>Pub Restant</th>
+                        <th>CA Encaissé</th>
+                        <th>CA Potentiel</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -185,16 +192,22 @@
                         <td th:text="${ca.heureDepart != null ? #temporals.format(ca.heureDepart, 'HH:mm') : '-'}">-</td>
                         <td style="color:#2196f3" th:text="${#numbers.formatInteger(ca.montantTickets, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#9c27b0" th:text="${#numbers.formatInteger(ca.montantPublicites, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(ca.montantPubPaye, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#ff9800" th:text="${#numbers.formatInteger(ca.montantPubRestant, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(ca.montantTotal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="font-weight:bold;color:#607d8b" th:text="${#numbers.formatInteger(ca.caPotentiel, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(caParVol)}">
-                        <td colspan="8" style="text-align:center;padding:20px;color:#999;">Aucun vol trouvé pour ces critères.</td>
+                        <td colspan="11" style="text-align:center;padding:20px;color:#999;">Aucun vol trouvé pour ces critères.</td>
                     </tr>
                     <tr th:if="${!#lists.isEmpty(caParVol)}" class="total-row">
                         <td colspan="5" style="text-align:right;"><strong>TOTAUX :</strong></td>
                         <td style="color:#2196f3" th:text="${#numbers.formatInteger(totalTickets, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#9c27b0" th:text="${#numbers.formatInteger(totalPublicites, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(totalPubPaye, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#ff9800" th:text="${#numbers.formatInteger(totalPubRestant, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#4caf50" th:text="${#numbers.formatInteger(totalGlobal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#607d8b" th:text="${#numbers.formatInteger(totalCaPotentiel, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                     </tr>
                     </tbody>
                 </table>

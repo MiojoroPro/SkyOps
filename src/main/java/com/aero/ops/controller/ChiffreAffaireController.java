@@ -81,7 +81,16 @@ public class ChiffreAffaireController {
         BigDecimal totalPublicites = caParVol.stream()
                 .map(ChiffreAffaireVolDTO::getMontantPublicites)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalGlobal = totalTickets.add(totalPublicites);
+        BigDecimal totalPubPaye = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getMontantPubPaye)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPubRestant = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getMontantPubRestant)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Total CA encaissé = tickets + publicités payées uniquement
+        BigDecimal totalGlobal = totalTickets.add(totalPubPaye);
+        // Total CA potentiel = tickets + toutes les publicités
+        BigDecimal totalCaPotentiel = totalTickets.add(totalPublicites);
 
         model.addAttribute("paiements", paiements);
         model.addAttribute("total", total);
@@ -90,7 +99,10 @@ public class ChiffreAffaireController {
         model.addAttribute("caParVol", caParVol);
         model.addAttribute("totalTickets", totalTickets);
         model.addAttribute("totalPublicites", totalPublicites);
+        model.addAttribute("totalPubPaye", totalPubPaye);
+        model.addAttribute("totalPubRestant", totalPubRestant);
         model.addAttribute("totalGlobal", totalGlobal);
+        model.addAttribute("totalCaPotentiel", totalCaPotentiel);
         model.addAttribute("vols", volService.getAll());
         model.addAttribute("utilisateurs", utilisateurService.getAll());
         model.addAttribute("avions", avionService.getAll());
@@ -145,9 +157,11 @@ public class ChiffreAffaireController {
             
             // Calcul du montant des publicités diffusées sur ce vol
             BigDecimal montantPublicites = BigDecimal.ZERO;
+            BigDecimal montantPubPaye = BigDecimal.ZERO;
             List<DiffusionPublicitaire> diffusions = diffusionPublicitaireService.getByVolDetail(vd.getIdVolDetail());
             for (DiffusionPublicitaire diff : diffusions) {
                 montantPublicites = montantPublicites.add(diff.getMontantTotal());
+                montantPubPaye = montantPubPaye.add(diff.getMontantPaye());
             }
             
             // Créer le DTO
@@ -167,7 +181,8 @@ public class ChiffreAffaireController {
                     vd.getDateHeureDepart().toLocalDate(),
                     vd.getDateHeureDepart().toLocalTime(),
                     montantTickets,
-                    montantPublicites
+                    montantPublicites,
+                    montantPubPaye
             );
             
             result.add(dto);
