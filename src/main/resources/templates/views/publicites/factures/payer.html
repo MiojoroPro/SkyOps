@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement au Prorata | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .payment-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .payment-card h2 {
+            margin: 0 0 8px 0;
+        }
+        .payment-card .big-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 16px 0;
+        }
+        .form-section {
+            background: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        .form-group input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        .help-text {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 4px;
+        }
+        .btn-simulate {
+            background: #2196f3;
+            color: white;
+        }
+        .btn-simulate:hover {
+            background: #1976d2;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 0 8px 8px 0;
+        }
+        .info-box h4 {
+            margin: 0 0 8px 0;
+            color: #1565c0;
+        }
+        .info-box p {
+            margin: 0;
+            color: #333;
+        }
+        .quick-amounts {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .quick-amounts button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .quick-amounts button:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités / Factures</p>
+                <h1>Paiement au Prorata</h1>
+            </div>
+            <a th:href="@{/publicites/factures/{id}(id=${facture.societe.idSociete})}" class="btn btn-secondary">← Retour</a>
+        </div>
+
+        <!-- Récapitulatif de la facture -->
+        <section class="content-section">
+            <div class="payment-card">
+                <h2 th:text="${facture.societe.nom}">Société</h2>
+                <p>Facture principale composée de <strong th:text="${#lists.size(facture.diffusions)}">0</strong> factures filles</p>
+                <div class="big-value" th:text="${#numbers.formatInteger(facture.resteAPayer, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                <p>Reste à payer sur un total de <span th:text="${#numbers.formatInteger(facture.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></span></p>
+            </div>
+
+            <!-- Explication du paiement au prorata -->
+            <div class="info-box">
+                <h4>💡 Comment fonctionne le paiement au prorata ?</h4>
+                <p>Le montant que vous payez sera réparti proportionnellement sur chaque facture fille selon son poids par rapport au total restant à payer.</p>
+                <p style="margin-top:8px;"><strong>Exemple :</strong> Si le reste total est 1000 Ar (composé de 200, 200 et 600 Ar) et vous payez 400 Ar (40%), chaque facture fille recevra 40% de son montant restant.</p>
+            </div>
+        </section>
+
+        <!-- Formulaire de paiement -->
+        <div class="form-section">
+            <h3 style="margin-top:0;margin-bottom:24px;">Saisir le montant du paiement</h3>
+            
+            <form th:action="@{/publicites/factures/{id}/simuler(id=${facture.societe.idSociete})}" method="get" id="simulateForm">
+                <div class="form-group">
+                    <label for="montant">Montant à payer (Ar) *</label>
+                    <input type="number" id="montant" name="montant" step="0.01" min="0.01" 
+                           th:max="${facture.resteAPayer}" th:value="${facture.resteAPayer}" required />
+                    <div class="help-text">Montant maximum : <span th:text="${#numbers.formatInteger(facture.resteAPayer, 1, 'WHITESPACE')} + ' Ar'"></span></div>
+                    
+                    <div class="quick-amounts">
+                        <button type="button" th:onclick="'setMontant(' + ${facture.resteAPayer} + ')'">100%</button>
+                        <button type="button" th:onclick="'setMontant(' + ${facture.resteAPayer * 0.75} + ')'">75%</button>
+                        <button type="button" th:onclick="'setMontant(' + ${facture.resteAPayer * 0.5} + ')'">50%</button>
+                        <button type="button" th:onclick="'setMontant(' + ${facture.resteAPayer * 0.25} + ')'">25%</button>
+                        <button type="button" th:onclick="'setMontant(' + ${facture.resteAPayer * 0.1} + ')'">10%</button>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;">
+                    <button type="submit" class="btn btn-simulate">📊 Simuler la répartition</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Liste des factures filles pour référence -->
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Aperçu des factures filles</h3>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Publicité</th>
+                        <th>Montant</th>
+                        <th>Payé</th>
+                        <th>Reste</th>
+                        <th>Poids (%)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="d : ${facture.diffusions}" th:if="${d.resteAPayer > 0}">
+                        <td th:text="${d.publicite != null ? d.publicite.titre : '-'}"></td>
+                        <td th:text="${#numbers.formatInteger(d.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(d.montantPaye, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#f44336;font-weight:bold;" th:text="${#numbers.formatInteger(d.resteAPayer, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td th:text="${#numbers.formatDecimal(d.resteAPayer * 100 / facture.resteAPayer, 1, 2)} + '%'"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function setMontant(value) {
+        document.getElementById('montant').value = Math.round(value * 100) / 100;
+    }
+</script>
+</body>
+</html>

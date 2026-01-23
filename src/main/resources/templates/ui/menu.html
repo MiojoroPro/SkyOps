@@ -37,6 +37,8 @@
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/diffusions')} ? ' is-active' : ''">Diffusions</a>
         <a class="menu-link" href="/publicites/paiements"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/paiements')} ? ' is-active' : ''">Paiements Pub</a>
+        <a class="menu-link" href="/publicites/factures"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/factures')} ? ' is-active' : ''">Factures</a>
         <a class="menu-link" href="/publicites/ca"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/ca')} ? ' is-active' : ''">CA Publicités</a>
         <hr style="border:none;border-top:1px solid var(--border-light);margin:10px 0;" />

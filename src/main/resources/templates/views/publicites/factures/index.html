@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factures Sociétés | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        .stat-card.success .value { color: #4caf50; }
+        .stat-card.info .value { color: #2196f3; }
+        .stat-card.danger .value { color: #f44336; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .btn-pay { background: #ff9800; color: white; }
+        .btn-pay:hover { background: #f57c00; }
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar .progress {
+            background: #4caf50;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités</p>
+                <h1>Factures par Société</h1>
+                <p class="module-description">Gérez les paiements au prorata pour chaque société annonceur.</p>
+            </div>
+        </div>
+
+        <!-- Statistiques Globales -->
+        <section class="content-section">
+            <div class="stats-grid">
+                <div class="stat-card info">
+                    <h4>Total Facturé</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalGlobal, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card success">
+                    <h4>Total Payé</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalPaye, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card danger">
+                    <h4>Total Reste</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalReste, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Liste des factures par société -->
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Factures par Société</h3>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Société</th>
+                        <th>Nb Diffusions</th>
+                        <th>Total Facturé</th>
+                        <th>Payé</th>
+                        <th>Reste à Payer</th>
+                        <th>Progression</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="f : ${factures}">
+                        <td>
+                            <strong th:text="${f.societe.nom}">Société</strong>
+                            <br><small th:text="${f.societe.email}" style="color:#666;"></small>
+                        </td>
+                        <td th:text="${#lists.size(f.diffusions)}">0</td>
+                        <td style="font-weight:bold;" th:text="${#numbers.formatInteger(f.montantTotal, 1, 'WHITESPACE')} + ' Ar'">0 Ar</td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(f.montantPaye, 1, 'WHITESPACE')} + ' Ar'">0 Ar</td>
+                        <td style="color:#f44336;font-weight:bold;" th:text="${#numbers.formatInteger(f.resteAPayer, 1, 'WHITESPACE')} + ' Ar'">0 Ar</td>
+                        <td style="min-width:120px;">
+                            <div class="progress-bar">
+                                <div class="progress" th:style="'width:' + ${f.pourcentagePaye} + '%'"></div>
+                            </div>
+                            <small th:text="${f.pourcentagePaye} + '%'"></small>
+                        </td>
+                        <td>
+                            <span th:if="${f.statutPaiement == 'PAYE'}" class="badge badge-success">PAYÉ</span>
+                            <span th:if="${f.statutPaiement == 'PARTIEL'}" class="badge badge-warning">PARTIEL</span>
+                            <span th:if="${f.statutPaiement == 'NON_PAYE'}" class="badge badge-danger">NON PAYÉ</span>
+                        </td>
+                        <td style="white-space: nowrap;">
+                            <a th:href="@{/publicites/factures/{id}(id=${f.societe.idSociete})}" class="btn btn-sm" title="Voir détails">👁️</a>
+                            <a th:if="${f.resteAPayer > 0}" th:href="@{/publicites/factures/{id}/payer(id=${f.societe.idSociete})}" class="btn btn-sm btn-pay" title="Payer au prorata">💰 Payer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(factures)}">
+                        <td colspan="8" style="text-align:center;padding:20px;color:#999;">Aucune facture trouvée.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation Paiement | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .simulation-card {
+            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .simulation-card h2 {
+            margin: 0 0 16px 0;
+        }
+        .simulation-card .big-value {
+            font-size: 3em;
+            font-weight: bold;
+        }
+        .simulation-card .subtitle {
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+        .form-section {
+            background: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        .repartition-highlight {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 0 8px 8px 0;
+        }
+        .btn-confirm {
+            background: #4caf50;
+            color: white;
+            padding: 14px 32px;
+            font-size: 1.1em;
+        }
+        .btn-confirm:hover {
+            background: #388e3c;
+        }
+        .btn-modify {
+            background: #ff9800;
+            color: white;
+        }
+        .total-row td {
+            font-weight: bold;
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités / Factures</p>
+                <h1>Simulation de Répartition</h1>
+            </div>
+            <a th:href="@{/publicites/factures/{id}/payer(id=${facture.societe.idSociete})}" class="btn btn-secondary">← Modifier le montant</a>
+        </div>
+
+        <!-- Résumé de la simulation -->
+        <section class="content-section">
+            <div class="simulation-card">
+                <h2>✅ Simulation du paiement pour <span th:text="${facture.societe.nom}"></span></h2>
+                <div class="big-value" th:text="${#numbers.formatInteger(montantPaiement, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                <p class="subtitle">
+                    Ce montant sera réparti sur <strong th:text="${#lists.size(repartitions)}">0</strong> factures filles
+                </p>
+                <p class="subtitle">
+                    Pourcentage du reste à payer : <strong th:text="${#numbers.formatDecimal(montantPaiement * 100 / facture.resteAPayer, 1, 2)} + '%'"></strong>
+                </p>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ Vérifiez la répartition ci-dessous avant de confirmer.</strong>
+                <p>Une fois confirmé, les paiements seront créés pour chaque facture fille selon la répartition proportionnelle.</p>
+            </div>
+        </section>
+
+        <!-- Tableau de répartition -->
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Répartition Proportionnelle</h3>
+                <p class="module-description">Voici comment le paiement de <strong th:text="${#numbers.formatInteger(montantPaiement, 1, 'WHITESPACE')} + ' Ar'"></strong> sera réparti :</p>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Publicité</th>
+                        <th>Vol</th>
+                        <th>Montant Facture</th>
+                        <th>Déjà Payé</th>
+                        <th>Poids (%)</th>
+                        <th>Montant Réparti</th>
+                        <th>Nouveau Total Payé</th>
+                        <th>Reste Après</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${repartitions}">
+                        <td th:text="${r.publicite}"></td>
+                        <td th:text="${r.vol}"></td>
+                        <td th:text="${#numbers.formatInteger(r.montantFacture, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#666" th:text="${#numbers.formatInteger(r.montantDejaPayeAvant, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td th:text="${#numbers.formatDecimal(r.poidsEnPourcentage, 1, 2)} + '%'"></td>
+                        <td>
+                            <span class="repartition-highlight" th:text="'+' + ${#numbers.formatInteger(r.montantReparti, 1, 'WHITESPACE')} + ' Ar'"></span>
+                        </td>
+                        <td style="color:#4caf50;font-weight:bold;" th:text="${#numbers.formatInteger(r.nouveauTotalPaye, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td th:style="${r.resteApresRepartition <= 0} ? 'color:#4caf50;font-weight:bold;' : 'color:#f44336;'" 
+                            th:text="${r.resteApresRepartition <= 0} ? 'SOLDÉ' : ${#numbers.formatInteger(r.resteApresRepartition, 1, 'WHITESPACE')} + ' Ar'"></td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr class="total-row">
+                        <td colspan="5" style="text-align:right;">TOTAL RÉPARTI :</td>
+                        <td>
+                            <span class="repartition-highlight" th:text="${#numbers.formatInteger(totalReparti, 1, 'WHITESPACE')} + ' Ar'"></span>
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Formulaire de confirmation -->
+        <div class="form-section">
+            <h3 style="margin-top:0;margin-bottom:24px;">Confirmer le paiement</h3>
+            
+            <form th:action="@{/publicites/factures/{id}/payer(id=${facture.societe.idSociete})}" method="post">
+                <input type="hidden" name="montant" th:value="${montantPaiement}" />
+                
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div class="form-group">
+                        <label for="reference">Référence du paiement</label>
+                        <input type="text" id="reference" name="reference" placeholder="Ex: VIREMENT-2026-001" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modePaiement">Mode de paiement</label>
+                        <select id="modePaiement" name="modePaiement">
+                            <option value="VIREMENT">Virement bancaire</option>
+                            <option value="CHEQUE">Chèque</option>
+                            <option value="ESPECES">Espèces</option>
+                            <option value="MOBILE_MONEY">Mobile Money</option>
+                            <option value="CARTE">Carte bancaire</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:24px;">
+                    <button type="submit" class="btn btn-confirm">✅ Confirmer le paiement de <span th:text="${#numbers.formatInteger(montantPaiement, 1, 'WHITESPACE')} + ' Ar'"></span></button>
+                    <a th:href="@{/publicites/factures/{id}/payer(id=${facture.societe.idSociete})}" class="btn btn-modify">✏️ Modifier le montant</a>
+                    <a th:href="@{/publicites/factures/{id}(id=${facture.societe.idSociete})}" class="btn btn-secondary">❌ Annuler</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

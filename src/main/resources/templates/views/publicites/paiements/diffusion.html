@@ -48,24 +48,28 @@
         <div class="main-header">
             <div>
                 <p class="eyebrow">Publicités > Paiements</p>
-                <h1>Paiements de la Diffusion #<span th:text="${diffusion.idDiffusion}"></span></h1>
+                <h1>Paiements de la Diffusion #<span th:text="${diffusion?.idDiffusion ?: 'N/A'}"></span></h1>
             </div>
             <a th:href="@{/publicites/paiements/new/{id}(id=${diffusion.idDiffusion})}" 
                class="btn btn-primary"
-               th:if="${diffusion.resteAPayer.compareTo(T(java.math.BigDecimal).ZERO) > 0}">+ Nouveau Paiement</a>
+               th:if="${diffusion != null and diffusion.resteAPayer.compareTo(T(java.math.BigDecimal).ZERO) > 0}">+ Nouveau Paiement</a>
         </div>
 
         <!-- Informations de la diffusion -->
-        <div class="info-box">
+        <div class="info-box" th:if="${diffusion != null}">
             <p><strong>Société :</strong> <span th:text="${diffusion.publicite?.societe?.nom ?: '-'}"></span></p>
             <p><strong>Publicité :</strong> <span th:text="${diffusion.publicite?.titre ?: '-'}"></span></p>
-            <p><strong>Avion :</strong> <span th:text="${diffusion.avion?.modele ?: '-'}"></span></p>
+            <p><strong>Vol :</strong> <span th:text="${diffusion.volDetail?.vol?.numeroVol ?: '-'}"></span> 
+                - <span th:text="${diffusion.volDetail?.avion?.modele ?: '-'}"></span></p>
             <p><strong>Période :</strong> <span th:text="${diffusion.mois + '/' + diffusion.annee}"></span></p>
             <p><strong>Nombre de diffusions :</strong> <span th:text="${diffusion.nombreDiffusions}"></span></p>
         </div>
+        <div class="info-box" th:if="${diffusion == null}">
+            <p style="color: red;">Diffusion non trouvée. Elle a peut-être été supprimée.</p>
+        </div>
 
         <!-- Statistiques -->
-        <section class="content-section">
+        <section class="content-section" th:if="${diffusion != null}">
             <div class="stats-grid">
                 <div class="stat-card info">
                     <h4>Montant Total</h4>

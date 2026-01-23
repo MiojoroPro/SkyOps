@@ -1,5 +1,7 @@
 package com.aero.ops.controller;
 
+import com.aero.ops.dto.FactureSocieteDTO;
+import com.aero.ops.dto.RepartitionPaiementDTO;
 import com.aero.ops.model.DiffusionPublicitaire;
 import com.aero.ops.model.PaiementPublicitaire;
 import com.aero.ops.model.Publicite;
@@ -392,5 +394,85 @@ public class PubliciteController {
         Long diffusionId = paiement.getDiffusion().getIdDiffusion();
         paiementPublicitaireService.delete(id);
         return "redirect:/publicites/paiements/diffusion/" + diffusionId;
+    }
+
+    // ==================== PAIEMENT AU PRORATA ====================
+
+    /**
+     * Liste des factures groupées par société pour paiement au prorata
+     */
+    @GetMapping("/factures")
+    public String listFactures(Model model) {
+        List<FactureSocieteDTO> factures = paiementPublicitaireService.getFacturesParSociete();
+        
+        BigDecimal totalGlobal = factures.stream()
+                .map(FactureSocieteDTO::getMontantTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPaye = factures.stream()
+                .map(FactureSocieteDTO::getMontantPaye)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalReste = factures.stream()
+                .map(FactureSocieteDTO::getResteAPayer)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        model.addAttribute("factures", factures);
+        model.addAttribute("totalGlobal", totalGlobal);
+        model.addAttribute("totalPaye", totalPaye);
+        model.addAttribute("totalReste", totalReste);
+        return "views/publicites/factures/index";
+    }
+
+    /**
+     * Détail d'une facture société avec ses diffusions (factures filles)
+     */
+    @GetMapping("/factures/{idSociete}")
+    public String detailFacture(@PathVariable Long idSociete, Model model) {
+        FactureSocieteDTO facture = paiementPublicitaireService.getFactureBySociete(idSociete);
+        model.addAttribute("facture", facture);
+        return "views/publicites/factures/detail";
+    }
+
+    /**
+     * Formulaire de paiement au prorata
+     */
+    @GetMapping("/factures/{idSociete}/payer")
+    public String formPaiementProrata(@PathVariable Long idSociete, Model model) {
+        FactureSocieteDTO facture = paiementPublicitaireService.getFactureBySociete(idSociete);
+        model.addAttribute("facture", facture);
+        model.addAttribute("montantPaiement", facture.getResteAPayer());
+        return "views/publicites/factures/payer";
+    }
+
+    /**
+     * Simulation du paiement au prorata (AJAX ou page de prévisualisation)
+     */
+    @GetMapping("/factures/{idSociete}/simuler")
+    public String simulerPaiementProrata(@PathVariable Long idSociete,
+                                          @RequestParam BigDecimal montant,
+                                          Model model) {
+        FactureSocieteDTO facture = paiementPublicitaireService.getFactureBySociete(idSociete);
+        List<RepartitionPaiementDTO> repartitions = paiementPublicitaireService.simulerPaiementProrata(idSociete, montant);
+        
+        BigDecimal totalReparti = repartitions.stream()
+                .map(RepartitionPaiementDTO::getMontantReparti)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        model.addAttribute("facture", facture);
+        model.addAttribute("repartitions", repartitions);
+        model.addAttribute("montantPaiement", montant);
+        model.addAttribute("totalReparti", totalReparti);
+        return "views/publicites/factures/simulation";
+    }
+
+    /**
+     * Exécution du paiement au prorata
+     */
+    @PostMapping("/factures/{idSociete}/payer")
+    public String executerPaiementProrata(@PathVariable Long idSociete,
+                                           @RequestParam BigDecimal montant,
+                                           @RequestParam(required = false) String reference,
+                                           @RequestParam(required = false) String modePaiement) {
+        paiementPublicitaireService.payerProrata(idSociete, montant, reference, modePaiement);
+        return "redirect:/publicites/factures/" + idSociete + "?success=true";
     }
 }

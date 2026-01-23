@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détail Facture | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        .stat-card.success .value { color: #4caf50; }
+        .stat-card.info .value { color: #2196f3; }
+        .stat-card.danger .value { color: #f44336; }
+        .stat-card.purple .value { color: #9c27b0; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .btn-pay { background: #ff9800; color: white; }
+        .btn-pay:hover { background: #f57c00; }
+        .societe-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .societe-header h2 {
+            margin: 0 0 8px 0;
+        }
+        .societe-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .progress-bar {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            height: 10px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        .progress-bar .progress {
+            background: #4caf50;
+            height: 100%;
+        }
+        .alert-success {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Publicités / Factures</p>
+                <h1>Détail Facture</h1>
+            </div>
+            <a href="/publicites/factures" class="btn btn-secondary">← Retour</a>
+        </div>
+
+        <!-- Message de succès -->
+        <div th:if="${param.success}" class="alert-success">
+            ✅ Paiement au prorata effectué avec succès !
+        </div>
+
+        <!-- En-tête Société -->
+        <section class="content-section">
+            <div class="societe-header">
+                <h2 th:text="${facture.societe.nom}">Société</h2>
+                <p th:text="${facture.societe.email}">email@example.com</p>
+                <p th:if="${facture.societe.telephone}" th:text="'Tél: ' + ${facture.societe.telephone}"></p>
+                <div class="progress-bar">
+                    <div class="progress" th:style="'width:' + ${facture.pourcentagePaye} + '%'"></div>
+                </div>
+                <small th:text="${facture.pourcentagePaye} + '% payé'"></small>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card info">
+                    <h4>Total Facturé</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(facture.montantTotal, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card success">
+                    <h4>Montant Payé</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(facture.montantPaye, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card danger">
+                    <h4>Reste à Payer</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(facture.resteAPayer, 1, 'WHITESPACE')} + ' Ar'">0 Ar</div>
+                </div>
+                <div class="stat-card purple">
+                    <h4>Nb Diffusions</h4>
+                    <div class="value" th:text="${#lists.size(facture.diffusions)}">0</div>
+                </div>
+            </div>
+
+            <div th:if="${facture.resteAPayer > 0}" style="text-align:center;margin-bottom:24px;">
+                <a th:href="@{/publicites/factures/{id}/payer(id=${facture.societe.idSociete})}" class="btn btn-pay" style="font-size:1.1em;padding:12px 32px;">
+                    💰 Payer au Prorata
+                </a>
+            </div>
+        </section>
+
+        <!-- Liste des factures filles (diffusions) -->
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Factures Filles (Diffusions)</h3>
+                <p class="module-description">Chaque diffusion représente une facture fille avec son propre montant.</p>
+            </header>
+
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Publicité</th>
+                        <th>Vol</th>
+                        <th>Période</th>
+                        <th>Nb Diff.</th>
+                        <th>Montant</th>
+                        <th>Payé</th>
+                        <th>Reste</th>
+                        <th>Poids (%)</th>
+                        <th>Statut</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="d : ${facture.diffusions}">
+                        <td th:text="${d.idDiffusion}"></td>
+                        <td th:text="${d.publicite != null ? d.publicite.titre : '-'}"></td>
+                        <td th:text="${d.volDetail != null and d.volDetail.vol != null ? d.volDetail.vol.numeroVol : '-'}"></td>
+                        <td th:text="${d.mois + '/' + d.annee}"></td>
+                        <td th:text="${d.nombreDiffusions}"></td>
+                        <td style="font-weight:bold;" th:text="${#numbers.formatInteger(d.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(d.montantPaye, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#f44336;font-weight:bold;" th:text="${#numbers.formatInteger(d.resteAPayer, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(facture.getPoidsFacture(d) * 100, 1, 2)} + '%'"></span>
+                        </td>
+                        <td>
+                            <span th:if="${d.statutPaiement == 'PAYE'}" class="badge badge-success">PAYÉ</span>
+                            <span th:if="${d.statutPaiement == 'PARTIEL'}" class="badge badge-warning">PARTIEL</span>
+                            <span th:if="${d.statutPaiement == 'NON_PAYE'}" class="badge badge-danger">NON PAYÉ</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr style="background:#f5f5f5;font-weight:bold;">
+                        <td colspan="5">TOTAL</td>
+                        <td th:text="${#numbers.formatInteger(facture.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(facture.montantPaye, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td style="color:#f44336" th:text="${#numbers.formatInteger(facture.resteAPayer, 1, 'WHITESPACE')} + ' Ar'"></td>
+                        <td>100%</td>
+                        <td>-</td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
