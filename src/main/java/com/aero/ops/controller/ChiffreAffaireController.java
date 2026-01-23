@@ -30,6 +30,7 @@ public class ChiffreAffaireController {
     private final CompagnieService compagnieService;
     private final VolDetailService volDetailService;
     private final DiffusionPublicitaireService diffusionPublicitaireService;
+    private final PaiementPublicitaireService paiementPublicitaireService;
 
     public ChiffreAffaireController(PaiementService paiementService,
                                     ReservationService reservationService,
@@ -38,7 +39,8 @@ public class ChiffreAffaireController {
                                     AvionService avionService,
                                     CompagnieService compagnieService,
                                     VolDetailService volDetailService,
-                                    DiffusionPublicitaireService diffusionPublicitaireService) {
+                                    DiffusionPublicitaireService diffusionPublicitaireService,
+                                    PaiementPublicitaireService paiementPublicitaireService) {
         this.paiementService = paiementService;
         this.reservationService = reservationService;
         this.volService = volService;
@@ -47,6 +49,7 @@ public class ChiffreAffaireController {
         this.compagnieService = compagnieService;
         this.volDetailService = volDetailService;
         this.diffusionPublicitaireService = diffusionPublicitaireService;
+        this.paiementPublicitaireService = paiementPublicitaireService;
     }
 
     @GetMapping
@@ -231,5 +234,118 @@ public class ChiffreAffaireController {
         model.addAttribute("endDate", endDate);
 
         return "views/chiffre-affaire/previsionnel";
+    }
+
+    /**
+     * CA Encaissé - affiche uniquement les montants réellement payés (tickets + publicités payées)
+     */
+    @GetMapping("/encaisse")
+    public String encaisse(
+            @RequestParam(value = "volId", required = false) Long volId,
+            @RequestParam(value = "avionId", required = false) Long avionId,
+            @RequestParam(value = "compagnieId", required = false) Long compagnieId,
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Model model) {
+
+        // Calcul du CA par vol avec uniquement les montants encaissés
+        List<ChiffreAffaireVolDTO> caParVol = calculerCAEncaisseParVol(startDate, endDate, compagnieId, avionId);
+        
+        // Totaux globaux
+        BigDecimal totalTickets = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getMontantTickets)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPublicites = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getMontantPublicites)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalGlobal = totalTickets.add(totalPublicites);
+
+        model.addAttribute("caParVol", caParVol);
+        model.addAttribute("totalTickets", totalTickets);
+        model.addAttribute("totalPublicites", totalPublicites);
+        model.addAttribute("totalGlobal", totalGlobal);
+        model.addAttribute("avions", avionService.getAll());
+        model.addAttribute("compagnies", compagnieService.getAll());
+        model.addAttribute("selectedAvion", avionId);
+        model.addAttribute("selectedCompagnie", compagnieId);
+        model.addAttribute("startDate", startDate);
+        model.addAttribute("endDate", endDate);
+
+        return "views/chiffre-affaire/encaisse";
+    }
+
+    /**
+     * Calcule le CA encaissé par vol (tickets payés + publicités payées uniquement)
+     */
+    private List<ChiffreAffaireVolDTO> calculerCAEncaisseParVol(LocalDate startDate, LocalDate endDate, Long compagnieId, Long avionId) {
+        List<ChiffreAffaireVolDTO> result = new ArrayList<>();
+        List<VolDetail> volDetails = volDetailService.getAll();
+        
+        for (VolDetail vd : volDetails) {
+            // Filtrer par date si spécifié
+            if (startDate != null && vd.getDateHeureDepart().toLocalDate().isBefore(startDate)) {
+                continue;
+            }
+            if (endDate != null && vd.getDateHeureDepart().toLocalDate().isAfter(endDate)) {
+                continue;
+            }
+            // Filtrer par compagnie si spécifié
+            if (compagnieId != null && (vd.getVol() == null || vd.getVol().getCompagnie() == null 
+                    || !vd.getVol().getCompagnie().getIdCompagnie().equals(compagnieId))) {
+                continue;
+            }
+            // Filtrer par avion si spécifié
+            if (avionId != null && (vd.getAvion() == null || !vd.getAvion().getIdAvion().equals(avionId))) {
+                continue;
+            }
+            
+            // Calcul du montant des tickets vendus (paiements confirmés)
+            BigDecimal montantTickets = BigDecimal.ZERO;
+            if (vd.getReservations() != null) {
+                for (Reservation res : vd.getReservations()) {
+                    if (res.getPaiement() != null && "PAYE".equals(res.getPaiement().getStatut())) {
+                        BigDecimal montant = res.getPaiement().getMontant();
+                        if (montant != null) {
+                            montantTickets = montantTickets.add(montant);
+                        }
+                    }
+                }
+            }
+            
+            // Calcul du montant des publicités DEJA PAYEES sur ce vol
+            BigDecimal montantPublicites = BigDecimal.ZERO;
+            List<DiffusionPublicitaire> diffusions = diffusionPublicitaireService.getByVolDetail(vd.getIdVolDetail());
+            for (DiffusionPublicitaire diff : diffusions) {
+                // Récupérer uniquement le montant déjà payé pour cette diffusion
+                BigDecimal montantPaye = paiementPublicitaireService.getTotalPayeByDiffusion(diff.getIdDiffusion());
+                if (montantPaye != null) {
+                    montantPublicites = montantPublicites.add(montantPaye);
+                }
+            }
+            
+            // Créer le DTO
+            String aeroportDepart = vd.getVol() != null && vd.getVol().getAeroportDepart() != null 
+                    ? vd.getVol().getAeroportDepart().getNom() + " (" + vd.getVol().getAeroportDepart().getCodeIata() + ")"
+                    : "-";
+            String aeroportArrivee = vd.getVol() != null && vd.getVol().getAeroportArrivee() != null 
+                    ? vd.getVol().getAeroportArrivee().getNom() + " (" + vd.getVol().getAeroportArrivee().getCodeIata() + ")"
+                    : "-";
+            String avion = vd.getAvion() != null ? vd.getAvion().getModele() : "-";
+            
+            ChiffreAffaireVolDTO dto = new ChiffreAffaireVolDTO(
+                    vd.getIdVolDetail(),
+                    aeroportDepart,
+                    aeroportArrivee,
+                    avion,
+                    vd.getDateHeureDepart().toLocalDate(),
+                    vd.getDateHeureDepart().toLocalTime(),
+                    montantTickets,
+                    montantPublicites
+            );
+            
+            result.add(dto);
+        }
+        
+        return result;
     }
 }
