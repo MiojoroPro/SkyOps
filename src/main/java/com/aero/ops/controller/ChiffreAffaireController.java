@@ -1,7 +1,10 @@
 package com.aero.ops.controller;
 
+import com.aero.ops.dto.ChiffreAffaireVolDTO;
+import com.aero.ops.model.DiffusionPublicitaire;
 import com.aero.ops.model.Paiement;
 import com.aero.ops.model.Reservation;
+import com.aero.ops.model.VolDetail;
 import com.aero.ops.service.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -24,19 +28,25 @@ public class ChiffreAffaireController {
     private final UtilisateurService utilisateurService;
     private final AvionService avionService;
     private final CompagnieService compagnieService;
+    private final VolDetailService volDetailService;
+    private final DiffusionPublicitaireService diffusionPublicitaireService;
 
     public ChiffreAffaireController(PaiementService paiementService,
                                     ReservationService reservationService,
                                     VolService volService,
                                     UtilisateurService utilisateurService,
                                     AvionService avionService,
-                                    CompagnieService compagnieService) {
+                                    CompagnieService compagnieService,
+                                    VolDetailService volDetailService,
+                                    DiffusionPublicitaireService diffusionPublicitaireService) {
         this.paiementService = paiementService;
         this.reservationService = reservationService;
         this.volService = volService;
         this.utilisateurService = utilisateurService;
         this.avionService = avionService;
         this.compagnieService = compagnieService;
+        this.volDetailService = volDetailService;
+        this.diffusionPublicitaireService = diffusionPublicitaireService;
     }
 
     @GetMapping
@@ -58,10 +68,26 @@ public class ChiffreAffaireController {
         int nbPaiements = paiements.size();
         BigDecimal moyenne = nbPaiements > 0 ? total.divide(BigDecimal.valueOf(nbPaiements), 2, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO;
 
+        // Calcul du CA par vol (avec tickets et publicités)
+        List<ChiffreAffaireVolDTO> caParVol = calculerCAParVol(startDate, endDate, compagnieId, avionId);
+        
+        // Totaux globaux
+        BigDecimal totalTickets = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getMontantTickets)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPublicites = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getMontantPublicites)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalGlobal = totalTickets.add(totalPublicites);
+
         model.addAttribute("paiements", paiements);
         model.addAttribute("total", total);
         model.addAttribute("nbPaiements", nbPaiements);
         model.addAttribute("moyenne", moyenne);
+        model.addAttribute("caParVol", caParVol);
+        model.addAttribute("totalTickets", totalTickets);
+        model.addAttribute("totalPublicites", totalPublicites);
+        model.addAttribute("totalGlobal", totalGlobal);
         model.addAttribute("vols", volService.getAll());
         model.addAttribute("utilisateurs", utilisateurService.getAll());
         model.addAttribute("avions", avionService.getAll());
@@ -74,6 +100,77 @@ public class ChiffreAffaireController {
         model.addAttribute("endDate", endDate);
 
         return "views/chiffre-affaire/index";
+    }
+
+    /**
+     * Calcule le CA par vol avec tickets vendus et publicités
+     */
+    private List<ChiffreAffaireVolDTO> calculerCAParVol(LocalDate startDate, LocalDate endDate, Long compagnieId, Long avionId) {
+        List<ChiffreAffaireVolDTO> result = new ArrayList<>();
+        List<VolDetail> volDetails = volDetailService.getAll();
+        
+        for (VolDetail vd : volDetails) {
+            // Filtrer par date si spécifié
+            if (startDate != null && vd.getDateHeureDepart().toLocalDate().isBefore(startDate)) {
+                continue;
+            }
+            if (endDate != null && vd.getDateHeureDepart().toLocalDate().isAfter(endDate)) {
+                continue;
+            }
+            // Filtrer par compagnie si spécifié
+            if (compagnieId != null && (vd.getVol() == null || vd.getVol().getCompagnie() == null 
+                    || !vd.getVol().getCompagnie().getIdCompagnie().equals(compagnieId))) {
+                continue;
+            }
+            // Filtrer par avion si spécifié
+            if (avionId != null && (vd.getAvion() == null || !vd.getAvion().getIdAvion().equals(avionId))) {
+                continue;
+            }
+            
+            // Calcul du montant des tickets vendus (paiements confirmés)
+            BigDecimal montantTickets = BigDecimal.ZERO;
+            if (vd.getReservations() != null) {
+                for (Reservation res : vd.getReservations()) {
+                    if (res.getPaiement() != null && "PAYE".equals(res.getPaiement().getStatut())) {
+                        BigDecimal montant = res.getPaiement().getMontant();
+                        if (montant != null) {
+                            montantTickets = montantTickets.add(montant);
+                        }
+                    }
+                }
+            }
+            
+            // Calcul du montant des publicités diffusées sur ce vol
+            BigDecimal montantPublicites = BigDecimal.ZERO;
+            List<DiffusionPublicitaire> diffusions = diffusionPublicitaireService.getByVolDetail(vd.getIdVolDetail());
+            for (DiffusionPublicitaire diff : diffusions) {
+                montantPublicites = montantPublicites.add(diff.getMontantTotal());
+            }
+            
+            // Créer le DTO
+            String aeroportDepart = vd.getVol() != null && vd.getVol().getAeroportDepart() != null 
+                    ? vd.getVol().getAeroportDepart().getNom() + " (" + vd.getVol().getAeroportDepart().getCodeIata() + ")"
+                    : "-";
+            String aeroportArrivee = vd.getVol() != null && vd.getVol().getAeroportArrivee() != null 
+                    ? vd.getVol().getAeroportArrivee().getNom() + " (" + vd.getVol().getAeroportArrivee().getCodeIata() + ")"
+                    : "-";
+            String avion = vd.getAvion() != null ? vd.getAvion().getModele() : "-";
+            
+            ChiffreAffaireVolDTO dto = new ChiffreAffaireVolDTO(
+                    vd.getIdVolDetail(),
+                    aeroportDepart,
+                    aeroportArrivee,
+                    avion,
+                    vd.getDateHeureDepart().toLocalDate(),
+                    vd.getDateHeureDepart().toLocalTime(),
+                    montantTickets,
+                    montantPublicites
+            );
+            
+            result.add(dto);
+        }
+        
+        return result;
     }
 
     /**

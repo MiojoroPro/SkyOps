@@ -32,6 +32,7 @@
         .stat-card.success .value { color: #4caf50; }
         .stat-card.info .value { color: #2196f3; }
         .stat-card.warning .value { color: #ff9800; }
+        .stat-card.purple .value { color: #9c27b0; }
         .filter-form {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -76,6 +77,10 @@
             background: #1565c0;
             color: #fff;
         }
+        .total-row td {
+            font-weight: bold;
+            background: #f5f5f5;
+        }
     </style>
 </head>
 <body>
@@ -90,20 +95,24 @@
             </div>
         </div>
 
-        <!-- Statistiques -->
+        <!-- Statistiques Globales -->
         <section class="content-section">
             <div class="stats-grid">
                 <div class="stat-card success">
-                    <h4>Total CA</h4>
-                    <div class="value" th:text="${#numbers.formatInteger(total, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
+                    <h4>CA Total</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalGlobal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
                 <div class="stat-card info">
-                    <h4>Nb Paiements</h4>
-                    <div class="value" th:text="${nbPaiements}">0</div>
+                    <h4>CA Tickets</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalTickets, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
+                </div>
+                <div class="stat-card purple">
+                    <h4>CA Publicités</h4>
+                    <div class="value" th:text="${#numbers.formatInteger(totalPublicites, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
                 <div class="stat-card warning">
-                    <h4>Moyenne / Paiement</h4>
-                    <div class="value" th:text="${#numbers.formatInteger(moyenne, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
+                    <h4>Nb Paiements</h4>
+                    <div class="value" th:text="${nbPaiements}">0</div>
                 </div>
             </div>
         </section>
@@ -133,20 +142,6 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Vol</label>
-                    <select name="volId">
-                        <option value="" th:selected="${selectedVol == null}">Tous</option>
-                        <option th:each="v : ${vols}" th:value="${v.idVol}" th:text="${v.numeroVol}" th:selected="${v.idVol == selectedVol}"></option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Client</label>
-                    <select name="userId">
-                        <option value="" th:selected="${selectedUser == null}">Tous</option>
-                        <option th:each="u : ${utilisateurs}" th:value="${u.idUtilisateur}" th:text="${u.nom + ' ' + u.prenom}" th:selected="${u.idUtilisateur == selectedUser}"></option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Date debut</label>
                     <input type="date" name="startDate" th:value="${startDate}" />
                 </div>
@@ -161,41 +156,45 @@
             </form>
         </div>
 
-        <!-- Tableau des paiements -->
+        <!-- Tableau CA par Vol -->
         <div class="table-wrapper" style="margin-top: 20px;">
             <header>
-                <h3 class="section-title">Details des paiements</h3>
+                <h3 class="section-title">Chiffre d'Affaires par Vol</h3>
             </header>
 
             <div class="table-responsive" style="padding: 0 24px 24px;">
                 <table class="data-table">
                     <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Reservation</th>
-                        <th>Vol</th>
+                        <th>Aéroport Départ</th>
+                        <th>Aéroport Arrivée</th>
                         <th>Avion</th>
-                        <th>Compagnie</th>
-                        <th>Client</th>
-                        <th>Classe</th>
-                        <th>Catégorie</th>
-                        <th>Montant</th>
+                        <th>Date Départ</th>
+                        <th>Heure Départ</th>
+                        <th>Montant Tickets</th>
+                        <th>Montant Publicités</th>
+                        <th>Total CA</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="p : ${paiements}">
-                        <td th:text="${p.datePaiement != null ? #temporals.format(p.datePaiement, 'dd/MM/yyyy HH:mm') : '-'}"></td>
-                        <td th:text="${p.reservation != null ? p.reservation.numeroReservation : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.vol != null ? p.reservation.volDetail.vol.numeroVol : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.avion != null ? p.reservation.volDetail.avion.modele : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.volDetail != null and p.reservation.volDetail.vol != null and p.reservation.volDetail.vol.compagnie != null ? p.reservation.volDetail.vol.compagnie.nom : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.utilisateur != null ? p.reservation.utilisateur.nom + ' ' + p.reservation.utilisateur.prenom : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.classeSiege != null ? p.reservation.classeSiege.libelle : '-'}"></td>
-                        <td th:text="${p.reservation != null and p.reservation.categorieAge != null ? p.reservation.categorieAge.libelle : '-'}"></td>
-                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(p.montant, 1, 'WHITESPACE')} + ' MGA'"></td>
+                    <tr th:each="ca : ${caParVol}">
+                        <td th:text="${ca.aeroportDepart}">-</td>
+                        <td th:text="${ca.aeroportArrivee}">-</td>
+                        <td th:text="${ca.avion}">-</td>
+                        <td th:text="${ca.dateDepart != null ? #temporals.format(ca.dateDepart, 'dd/MM/yyyy') : '-'}">-</td>
+                        <td th:text="${ca.heureDepart != null ? #temporals.format(ca.heureDepart, 'HH:mm') : '-'}">-</td>
+                        <td style="color:#2196f3" th:text="${#numbers.formatInteger(ca.montantTickets, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#9c27b0" th:text="${#numbers.formatInteger(ca.montantPublicites, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(ca.montantTotal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(paiements)}">
-                        <td colspan="9" style="text-align:center;padding:20px;color:#999;">Aucun paiement trouve pour ces criteres.</td>
+                    <tr th:if="${#lists.isEmpty(caParVol)}">
+                        <td colspan="8" style="text-align:center;padding:20px;color:#999;">Aucun vol trouvé pour ces critères.</td>
+                    </tr>
+                    <tr th:if="${!#lists.isEmpty(caParVol)}" class="total-row">
+                        <td colspan="5" style="text-align:right;"><strong>TOTAUX :</strong></td>
+                        <td style="color:#2196f3" th:text="${#numbers.formatInteger(totalTickets, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#9c27b0" th:text="${#numbers.formatInteger(totalPublicites, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#4caf50" th:text="${#numbers.formatInteger(totalGlobal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                     </tr>
                     </tbody>
                 </table>

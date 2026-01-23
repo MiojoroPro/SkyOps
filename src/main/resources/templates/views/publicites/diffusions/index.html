@@ -122,10 +122,10 @@
                     <input type="number" name="annee" th:value="${selectedAnnee}" placeholder="2025" min="2020" max="2030" />
                 </div>
                 <div class="form-group">
-                    <label>Avion</label>
-                    <select name="avionId">
+                    <label>Vol</label>
+                    <select name="volDetailId">
                         <option value="">Tous</option>
-                        <option th:each="a : ${avions}" th:value="${a.idAvion}" th:text="${a.modele + ' (' + (a.compagnie != null ? a.compagnie.nom : '') + ')'}" th:selected="${a.idAvion == selectedAvion}"></option>
+                        <option th:each="vd : ${volDetails}" th:value="${vd.idVolDetail}" th:text="${(vd.vol != null ? vd.vol.numeroVol : '') + ' (' + (vd.dateHeureDepart != null ? #temporals.format(vd.dateHeureDepart, 'dd/MM/yyyy') : '') + ')'}" th:selected="${vd.idVolDetail == selectedVolDetail}"></option>
                     </select>
                 </div>
                 <div class="filter-actions">
@@ -148,7 +148,7 @@
                         <th>ID</th>
                         <th>Publicité</th>
                         <th>Société</th>
-                        <th>Avion</th>
+                        <th>Vol</th>
                         <th>Période</th>
                         <th>Nb Diff.</th>
                         <th>Montant Total</th>
@@ -163,7 +163,7 @@
                         <td th:text="${d.idDiffusion}"></td>
                         <td th:text="${d.publicite != null ? d.publicite.titre : '-'}"></td>
                         <td th:text="${d.publicite != null and d.publicite.societe != null ? d.publicite.societe.nom : '-'}"></td>
-                        <td th:text="${d.avion != null ? d.avion.modele : '-'}"></td>
+                        <td th:text="${d.volDetail != null and d.volDetail.vol != null ? d.volDetail.vol.numeroVol + ' (' + (d.volDetail.dateHeureDepart != null ? #temporals.format(d.volDetail.dateHeureDepart, 'dd/MM/yyyy') : '') + ')' : '-'}"></td>
                         <td th:text="${d.mois + '/' + d.annee}"></td>
                         <td th:text="${d.nombreDiffusions}"></td>
                         <td style="font-weight:bold;" th:text="${#numbers.formatInteger(d.montantTotal, 1, 'WHITESPACE')} + ' Ar'"></td>

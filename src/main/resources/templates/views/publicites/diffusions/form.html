@@ -42,12 +42,12 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Avion *</label>
-                    <select name="avionId" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                    <label>Vol Détail *</label>
+                    <select name="volDetailId" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
                         <option value="">-- Sélectionner --</option>
-                        <option th:each="a : ${avions}" th:value="${a.idAvion}" 
-                                th:text="${a.modele + ' (' + (a.compagnie != null ? a.compagnie.nom : '') + ')' }" 
-                                th:selected="${diffusion.avion != null and diffusion.avion.idAvion == a.idAvion}"></option>
+                        <option th:each="vd : ${volDetails}" th:value="${vd.idVolDetail}" 
+                                th:text="${(vd.vol != null ? vd.vol.numeroVol : '') + ' - ' + (vd.vol != null and vd.vol.aeroportDepart != null ? vd.vol.aeroportDepart.codeIata : '') + ' → ' + (vd.vol != null and vd.vol.aeroportArrivee != null ? vd.vol.aeroportArrivee.codeIata : '') + ' (' + (vd.dateHeureDepart != null ? #temporals.format(vd.dateHeureDepart, 'dd/MM/yyyy HH:mm') : '') + ')' }" 
+                                th:selected="${diffusion.volDetail != null and diffusion.volDetail.idVolDetail == vd.idVolDetail}"></option>
                     </select>
                 </div>
 

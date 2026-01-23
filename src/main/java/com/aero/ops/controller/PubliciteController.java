@@ -5,12 +5,12 @@ import com.aero.ops.model.PaiementPublicitaire;
 import com.aero.ops.model.Publicite;
 import com.aero.ops.model.SocieteAnnonceur;
 import com.aero.ops.model.TarifPublicitaire;
-import com.aero.ops.service.AvionService;
 import com.aero.ops.service.DiffusionPublicitaireService;
 import com.aero.ops.service.PaiementPublicitaireService;
 import com.aero.ops.service.PubliciteService;
 import com.aero.ops.service.SocieteAnnonceurService;
 import com.aero.ops.service.TarifPublicitaireService;
+import com.aero.ops.service.VolDetailService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,20 +29,20 @@ public class PubliciteController {
     private final PubliciteService publiciteService;
     private final TarifPublicitaireService tarifPublicitaireService;
     private final DiffusionPublicitaireService diffusionPublicitaireService;
-    private final AvionService avionService;
+    private final VolDetailService volDetailService;
     private final PaiementPublicitaireService paiementPublicitaireService;
 
     public PubliciteController(SocieteAnnonceurService societeAnnonceurService,
                                PubliciteService publiciteService,
                                TarifPublicitaireService tarifPublicitaireService,
                                DiffusionPublicitaireService diffusionPublicitaireService,
-                               AvionService avionService,
+                               VolDetailService volDetailService,
                                PaiementPublicitaireService paiementPublicitaireService) {
         this.societeAnnonceurService = societeAnnonceurService;
         this.publiciteService = publiciteService;
         this.tarifPublicitaireService = tarifPublicitaireService;
         this.diffusionPublicitaireService = diffusionPublicitaireService;
-        this.avionService = avionService;
+        this.volDetailService = volDetailService;
         this.paiementPublicitaireService = paiementPublicitaireService;
     }
 
@@ -152,15 +152,15 @@ public class PubliciteController {
             @RequestParam(value = "mois", required = false) Integer mois,
             @RequestParam(value = "annee", required = false) Integer annee,
             @RequestParam(value = "societeId", required = false) Long societeId,
-            @RequestParam(value = "avionId", required = false) Long avionId,
+            @RequestParam(value = "volDetailId", required = false) Long volDetailId,
             Model model) {
 
         List<DiffusionPublicitaire> diffusions = diffusionPublicitaireService.getAll();
         
-        // Filtrage par avion
-        if (avionId != null) {
+        // Filtrage par vol détail
+        if (volDetailId != null) {
             diffusions = diffusions.stream()
-                    .filter(d -> d.getAvion() != null && d.getAvion().getIdAvion().equals(avionId))
+                    .filter(d -> d.getVolDetail() != null && d.getVolDetail().getIdVolDetail().equals(volDetailId))
                     .collect(Collectors.toList());
         }
         
@@ -198,11 +198,11 @@ public class PubliciteController {
 
         model.addAttribute("diffusions", diffusions);
         model.addAttribute("societes", societeAnnonceurService.getAll());
-        model.addAttribute("avions", avionService.getAll());
+        model.addAttribute("volDetails", volDetailService.getAll());
         model.addAttribute("selectedMois", mois);
         model.addAttribute("selectedAnnee", annee);
         model.addAttribute("selectedSociete", societeId);
-        model.addAttribute("selectedAvion", avionId);
+        model.addAttribute("selectedVolDetail", volDetailId);
         model.addAttribute("totalCA", totalCA);
         model.addAttribute("totalDiffusions", totalDiffusions);
         
@@ -232,7 +232,7 @@ public class PubliciteController {
         model.addAttribute("diffusion", new DiffusionPublicitaire());
         model.addAttribute("publicites", publiciteService.getAll());
         model.addAttribute("tarifs", tarifPublicitaireService.getAll());
-        model.addAttribute("avions", avionService.getAll());
+        model.addAttribute("volDetails", volDetailService.getAll());
         return "views/publicites/diffusions/form";
     }
 
@@ -240,10 +240,10 @@ public class PubliciteController {
     public String saveDiffusion(@ModelAttribute DiffusionPublicitaire diffusion,
                                 @RequestParam Long publiciteId,
                                 @RequestParam Long tarifId,
-                                @RequestParam Long avionId) {
+                                @RequestParam Long volDetailId) {
         diffusion.setPublicite(publiciteService.getById(publiciteId));
         diffusion.setTarif(tarifPublicitaireService.getById(tarifId));
-        diffusion.setAvion(avionService.getById(avionId));
+        diffusion.setVolDetail(volDetailService.getById(volDetailId));
         diffusionPublicitaireService.create(diffusion);
         return "redirect:/publicites/diffusions";
     }
@@ -253,7 +253,7 @@ public class PubliciteController {
         model.addAttribute("diffusion", diffusionPublicitaireService.getById(id));
         model.addAttribute("publicites", publiciteService.getAll());
         model.addAttribute("tarifs", tarifPublicitaireService.getAll());
-        model.addAttribute("avions", avionService.getAll());
+        model.addAttribute("volDetails", volDetailService.getAll());
         return "views/publicites/diffusions/form";
     }
 
@@ -270,15 +270,15 @@ public class PubliciteController {
             @RequestParam(value = "mois", required = false) Integer mois,
             @RequestParam(value = "annee", required = false) Integer annee,
             @RequestParam(value = "societeId", required = false) Long societeId,
-            @RequestParam(value = "avionId", required = false) Long avionId,
+            @RequestParam(value = "volDetailId", required = false) Long volDetailId,
             Model model) {
 
         List<DiffusionPublicitaire> diffusions = diffusionPublicitaireService.getAll();
         
-        // Filtrage par avion
-        if (avionId != null) {
+        // Filtrage par vol détail
+        if (volDetailId != null) {
             diffusions = diffusions.stream()
-                    .filter(d -> d.getAvion() != null && d.getAvion().getIdAvion().equals(avionId))
+                    .filter(d -> d.getVolDetail() != null && d.getVolDetail().getIdVolDetail().equals(volDetailId))
                     .collect(Collectors.toList());
         }
         
@@ -331,11 +331,11 @@ public class PubliciteController {
 
         model.addAttribute("diffusions", diffusions);
         model.addAttribute("societes", societeAnnonceurService.getAll());
-        model.addAttribute("avions", avionService.getAll());
+        model.addAttribute("volDetails", volDetailService.getAll());
         model.addAttribute("selectedMois", mois);
         model.addAttribute("selectedAnnee", annee);
         model.addAttribute("selectedSociete", societeId);
-        model.addAttribute("selectedAvion", avionId);
+        model.addAttribute("selectedVolDetail", volDetailId);
         model.addAttribute("totalCA", totalCA);
         model.addAttribute("totalPaye", totalPaye);
         model.addAttribute("totalResteAPayer", totalResteAPayer);

@@ -42,6 +42,9 @@ public class VolDetail {
     @OneToMany(mappedBy = "volDetail")
     private List<Reservation> reservations;
 
+    @OneToMany(mappedBy = "volDetail")
+    private List<DiffusionPublicitaire> diffusionsPublicitaires;
+
     /**
      * Calcule les places restantes pour une classe spécifique basées sur les réservations
      * Places restantes = Capacité totale - Nombre de réservations (confirmées + en attente)

@@ -37,8 +37,8 @@ public class DiffusionPublicitaire {
     private TarifPublicitaire tarif;
 
     @ManyToOne
-    @JoinColumn(name = "id_avion", nullable = false)
-    private Avion avion;
+    @JoinColumn(name = "id_vol_detail", nullable = false)
+    private VolDetail volDetail;
 
     @OneToMany(mappedBy = "diffusion", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PaiementPublicitaire> paiements = new ArrayList<>();

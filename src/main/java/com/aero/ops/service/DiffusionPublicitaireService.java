@@ -40,12 +40,12 @@ public class DiffusionPublicitaireService {
         return diffusionPublicitaireRepository.findByAnnee(annee);
     }
 
-    public List<DiffusionPublicitaire> getByAvion(Long idAvion) {
-        return diffusionPublicitaireRepository.findByAvionIdAvion(idAvion);
+    public List<DiffusionPublicitaire> getByVolDetail(Long idVolDetail) {
+        return diffusionPublicitaireRepository.findByVolDetailIdVolDetail(idVolDetail);
     }
 
-    public List<DiffusionPublicitaire> getByAvionAndMoisAndAnnee(Long idAvion, Integer mois, Integer annee) {
-        return diffusionPublicitaireRepository.findByAvionIdAvionAndMoisAndAnnee(idAvion, mois, annee);
+    public List<DiffusionPublicitaire> getByVolDetailAndMoisAndAnnee(Long idVolDetail, Integer mois, Integer annee) {
+        return diffusionPublicitaireRepository.findByVolDetailIdVolDetailAndMoisAndAnnee(idVolDetail, mois, annee);
     }
 
     public DiffusionPublicitaire create(DiffusionPublicitaire diffusion) {

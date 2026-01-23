@@ -34,12 +34,12 @@ public interface DiffusionPublicitaireRepository extends JpaRepository<Diffusion
     List<DiffusionPublicitaire> findByAnnee(Integer annee);
     
     /**
-     * Trouve toutes les diffusions pour un avion donné
+     * Trouve toutes les diffusions pour un vol détail donné
      */
-    List<DiffusionPublicitaire> findByAvionIdAvion(Long idAvion);
+    List<DiffusionPublicitaire> findByVolDetailIdVolDetail(Long idVolDetail);
     
     /**
-     * Trouve toutes les diffusions pour un avion, un mois et une année donnés
+     * Trouve toutes les diffusions pour un vol détail, un mois et une année donnés
      */
-    List<DiffusionPublicitaire> findByAvionIdAvionAndMoisAndAnnee(Long idAvion, Integer mois, Integer annee);
+    List<DiffusionPublicitaire> findByVolDetailIdVolDetailAndMoisAndAnnee(Long idVolDetail, Integer mois, Integer annee);
 }

@@ -262,7 +262,7 @@ CREATE TABLE diffusion_publicitaire (
 
     id_publicite INT NOT NULL,
     id_tarif INT NOT NULL,
-    id_avion INT NOT NULL,
+    id_vol_detail INT NOT NULL,
 
     CONSTRAINT fk_diffusion_publicite
         FOREIGN KEY (id_publicite)
@@ -272,12 +272,16 @@ CREATE TABLE diffusion_publicitaire (
         FOREIGN KEY (id_tarif)
         REFERENCES tarif_publicitaire(id_tarif),
 
-    CONSTRAINT fk_diffusion_avion
-        FOREIGN KEY (id_avion)
-        REFERENCES avion(id_avion),
+    CONSTRAINT fk_diffusion_vol_detail
+        FOREIGN KEY (id_vol_detail)
+        REFERENCES vol_detail(id_vol_detail),
 
-    CONSTRAINT chk_mois CHECK (mois BETWEEN 1 AND 12)
+    CONSTRAINT chk_mois CHECK (mois BETWEEN 1 AND 12),
+
+    CONSTRAINT uq_diffusion_unique
+        UNIQUE (id_publicite, id_vol_detail, mois, annee)
 );
+
 
 -- =========================
 -- TABLE PAIEMENT_PUBLICITAIRE
@@ -296,36 +300,4 @@ CREATE TABLE paiement_publicitaire (
         REFERENCES diffusion_publicitaire(id_diffusion)
 );
 
--- =========================
--- DONNEES DE TEST PUBLICITES
--- =========================
 
--- Sociétés annonceurs
-INSERT INTO societe_annonceur (nom, adresse, telephone, email) VALUES
-('Vaniala', 'Antananarivo, Madagascar', '0341234567', 'contact@vaniala.mg'),
-('Lewis', 'Antsirabe, Madagascar', '0347654321', 'lewis@lewis.mg');
-
--- Tarif publicitaire (400 000 Ar / diffusion)
-INSERT INTO tarif_publicitaire (prix_unitaire, date_debut, date_fin) VALUES
-(400000, '2025-01-01', NULL);
-
--- Publicités
-INSERT INTO publicite (titre, description, url_video, date_creation, id_societe) VALUES
-('Promo Vaniala Noel 2025', 'Publicité promotionnelle pour les fêtes de Noël', 'https://example.com/vaniala-noel.mp4', '2025-12-01', 1),
-('Lewis Collection 2026', 'Nouvelle collection Lewis 2026', 'https://example.com/lewis-2026.mp4', '2025-12-10', 2);
-
--- Diffusions (Vaniala: 20 diffusions, Lewis: 10 diffusions en décembre 2025)
--- Supposons que l'avion id=1 existe déjà
-INSERT INTO diffusion_publicitaire (mois, annee, nombre_diffusions, id_publicite, id_tarif, id_avion) VALUES
-(12, 2025, 20, 1, 1, 1),  -- Vaniala: 20 diffusions = 8 000 000 Ar
-(12, 2025, 10, 2, 1, 1);  -- Lewis: 10 diffusions = 4 000 000 Ar
-
--- Paiements de test
--- Vaniala a payé partiellement (5 000 000 sur 8 000 000)
-INSERT INTO paiement_publicitaire (montant, date_paiement, reference, mode_paiement, id_diffusion) VALUES
-(3000000, '2025-12-15 10:30:00', 'PAY-VAN-001', 'VIREMENT', 1),
-(2000000, '2025-12-20 14:00:00', 'PAY-VAN-002', 'ESPECES', 1);
-
--- Lewis a payé intégralement (4 000 000)
-INSERT INTO paiement_publicitaire (montant, date_paiement, reference, mode_paiement, id_diffusion) VALUES
-(4000000, '2025-12-18 09:00:00', 'PAY-LEW-001', 'VIREMENT', 2);
