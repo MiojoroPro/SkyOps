@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produit Extra | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Produits Extra</p>
+                <h1 th:text="${produit.idProduit != null ? 'Modifier le produit' : 'Nouveau produit'}">Formulaire</h1>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <div style="padding: 24px;">
+                <form th:action="${produit.idProduit != null ? '/produits-extra/update/' + produit.idProduit : '/produits-extra/save'}" method="post">
+                    
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="nom">Nom du produit *</label>
+                        <input type="text" id="nom" name="nom" th:value="${produit.nom}" required
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                               placeholder="Ex: Eau minérale 50cl">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="3"
+                                  style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                                  placeholder="Description du produit" th:text="${produit.description}"></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="prixUnitaire">Prix unitaire (MGA) *</label>
+                        <input type="number" id="prixUnitaire" name="prixUnitaire" th:value="${produit.prixUnitaire}" 
+                               required min="0" step="100"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                               placeholder="Ex: 5000">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="compagnieId">Compagnie *</label>
+                        <select id="compagnieId" name="compagnieId" required
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">-- Sélectionner une compagnie --</option>
+                            <option th:each="c : ${compagnies}" th:value="${c.idCompagnie}" th:text="${c.nom}"
+                                    th:selected="${produit.compagnie != null && produit.compagnie.idCompagnie == c.idCompagnie}"></option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="btn btn-add">Enregistrer</button>
+                        <a href="/produits-extra" class="btn btn-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <span>2026 Compagnie aerienne</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>

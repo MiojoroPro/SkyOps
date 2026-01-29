@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produits Extra | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Gestion</p>
+                <h1>Produits Extra</h1>
+                <p class="module-description">Gérez les produits vendus à bord par les compagnies (eau, snacks, etc.)</p>
+            </div>
+            <div class="main-actions">
+                <a href="/produits-extra/ventes" class="btn btn-secondary">Voir les ventes</a>
+                <a href="/produits-extra/create" class="btn btn-add">+ Nouveau Produit</a>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <!-- Filtres -->
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Filtrer par compagnie</h3>
+            </header>
+            <form th:action="@{/produits-extra}" method="get" style="padding: 16px 24px; display: flex; gap: 12px; align-items: end;">
+                <div class="form-group" style="margin: 0;">
+                    <label>Compagnie</label>
+                    <select name="compagnieId" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px;">
+                        <option value="">Toutes les compagnies</option>
+                        <option th:each="c : ${compagnies}" th:value="${c.idCompagnie}" th:text="${c.nom}" 
+                                th:selected="${c.idCompagnie == selectedCompagnie}"></option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-apply">Filtrer</button>
+                <a href="/produits-extra" class="btn btn-secondary">Reset</a>
+            </form>
+        </div>
+
+        <!-- Tableau des produits -->
+        <div class="table-wrapper" style="margin-top: 20px;">
+            <header>
+                <h3 class="section-title">Liste des produits</h3>
+            </header>
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Description</th>
+                        <th>Prix Unitaire</th>
+                        <th>Compagnie</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${produits}">
+                        <td th:text="${p.idProduit}">-</td>
+                        <td th:text="${p.nom}">-</td>
+                        <td th:text="${p.description != null ? p.description : '-'}">-</td>
+                        <td style="font-weight: bold; color: #4caf50;" 
+                            th:text="${#numbers.formatInteger(p.prixUnitaire, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td th:text="${p.compagnie != null ? p.compagnie.nom : '-'}">-</td>
+                        <td>
+                            <a th:href="@{/produits-extra/edit/{id}(id=${p.idProduit})}" class="btn btn-sm btn-edit">Modifier</a>
+                            <a th:href="@{/produits-extra/delete/{id}(id=${p.idProduit})}" class="btn btn-sm btn-delete"
+                               onclick="return confirm('Supprimer ce produit ?');">Supprimer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(produits)}">
+                        <td colspan="6" style="text-align:center;padding:20px;color:#999;">Aucun produit trouvé.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <span>2026 Compagnie aerienne</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>

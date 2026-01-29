@@ -114,6 +114,14 @@
                     <h4>Pub Restant</h4>
                     <div class="value" th:text="${#numbers.formatInteger(totalPubRestant, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
                 </div>
+                <div class="stat-card" style="border-left: 4px solid #e91e63;">
+                    <h4>Produits Vendus</h4>
+                    <div class="value" style="color:#e91e63" th:text="${totalNbProduits} + ' unités'">0 unités</div>
+                </div>
+                <div class="stat-card" style="border-left: 4px solid #00bcd4;">
+                    <h4>CA Produits</h4>
+                    <div class="value" style="color:#00bcd4" th:text="${#numbers.formatInteger(totalMontantProduits, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
+                </div>
                 <div class="stat-card" style="border-left: 4px solid #607d8b;">
                     <h4>CA Potentiel (si tout payé)</h4>
                     <div class="value" style="color:#607d8b" th:text="${#numbers.formatInteger(totalCaPotentiel, 1, 'WHITESPACE')} + ' MGA'">0 MGA</div>
@@ -179,6 +187,8 @@
                         <th>Pub Total</th>
                         <th>Pub Payé</th>
                         <th>Pub Restant</th>
+                        <th>Produits (Qté)</th>
+                        <th>CA Produits</th>
                         <th>CA Encaissé</th>
                         <th>CA Potentiel</th>
                     </tr>
@@ -194,11 +204,13 @@
                         <td style="color:#9c27b0" th:text="${#numbers.formatInteger(ca.montantPublicites, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#4caf50" th:text="${#numbers.formatInteger(ca.montantPubPaye, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#ff9800" th:text="${#numbers.formatInteger(ca.montantPubRestant, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#e91e63;font-weight:bold" th:text="${ca.nbProduitsVendus}">0</td>
+                        <td style="color:#00bcd4" th:text="${#numbers.formatInteger(ca.montantProduits, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="font-weight:bold;color:#4caf50" th:text="${#numbers.formatInteger(ca.montantTotal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="font-weight:bold;color:#607d8b" th:text="${#numbers.formatInteger(ca.caPotentiel, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(caParVol)}">
-                        <td colspan="11" style="text-align:center;padding:20px;color:#999;">Aucun vol trouvé pour ces critères.</td>
+                        <td colspan="13" style="text-align:center;padding:20px;color:#999;">Aucun vol trouvé pour ces critères.</td>
                     </tr>
                     <tr th:if="${!#lists.isEmpty(caParVol)}" class="total-row">
                         <td colspan="5" style="text-align:right;"><strong>TOTAUX :</strong></td>
@@ -206,6 +218,8 @@
                         <td style="color:#9c27b0" th:text="${#numbers.formatInteger(totalPublicites, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#4caf50" th:text="${#numbers.formatInteger(totalPubPaye, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#ff9800" th:text="${#numbers.formatInteger(totalPubRestant, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="color:#e91e63;font-weight:bold" th:text="${totalNbProduits}">0</td>
+                        <td style="color:#00bcd4" th:text="${#numbers.formatInteger(totalMontantProduits, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#4caf50" th:text="${#numbers.formatInteger(totalGlobal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                         <td style="color:#607d8b" th:text="${#numbers.formatInteger(totalCaPotentiel, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
                     </tr>

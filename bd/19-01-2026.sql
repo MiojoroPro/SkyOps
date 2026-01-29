@@ -300,4 +300,43 @@ CREATE TABLE paiement_publicitaire (
         REFERENCES diffusion_publicitaire(id_diffusion)
 );
 
+-- =========================
+-- TABLE PRODUIT_EXTRA
+-- =========================
+-- Produits vendus par les compagnies aériennes (eau, snacks, etc.)
+CREATE TABLE produit_extra (
+    id_produit SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    description TEXT,
+    prix_unitaire DECIMAL(10,2) NOT NULL CHECK (prix_unitaire > 0),
+    
+    id_compagnie INT NOT NULL,
+    
+    CONSTRAINT fk_produit_compagnie
+        FOREIGN KEY (id_compagnie)
+        REFERENCES compagnie(id_compagnie)
+);
+
+-- =========================
+-- TABLE VENTE_PRODUIT
+-- =========================
+-- Ventes de produits extra pendant un vol
+CREATE TABLE vente_produit (
+    id_vente SERIAL PRIMARY KEY,
+    quantite INT NOT NULL CHECK (quantite > 0),
+    prix_unitaire_vente DECIMAL(10,2) NOT NULL,
+    date_vente TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    id_produit INT NOT NULL,
+    id_vol_detail INT NOT NULL,
+    
+    CONSTRAINT fk_vente_produit
+        FOREIGN KEY (id_produit)
+        REFERENCES produit_extra(id_produit),
+    
+    CONSTRAINT fk_vente_vol_detail
+        FOREIGN KEY (id_vol_detail)
+        REFERENCES vol_detail(id_vol_detail)
+);
+
 

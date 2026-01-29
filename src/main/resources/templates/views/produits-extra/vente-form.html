@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle Vente | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Ventes Produits</p>
+                <h1>Enregistrer une vente</h1>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <div style="padding: 24px;">
+                <form action="/produits-extra/ventes/save" method="post">
+                    
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="volDetailId">Vol *</label>
+                        <select id="volDetailId" name="volDetailId" required
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">-- Sélectionner un vol --</option>
+                            <option th:each="vd : ${volDetails}" th:value="${vd.idVolDetail}" 
+                                    th:text="${vd.vol.numeroVol + ' - ' + vd.vol.aeroportDepart.codeIata + ' → ' + vd.vol.aeroportArrivee.codeIata + ' (' + #temporals.format(vd.dateHeureDepart, 'dd/MM/yyyy HH:mm') + ')'}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="produitId">Produit *</label>
+                        <select id="produitId" name="produitId" required
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">-- Sélectionner un produit --</option>
+                            <option th:each="p : ${produits}" th:value="${p.idProduit}" 
+                                    th:text="${p.nom + ' - ' + #numbers.formatInteger(p.prixUnitaire, 1, 'WHITESPACE') + ' MGA (' + p.compagnie.nom + ')'}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="quantite">Quantité *</label>
+                        <input type="number" id="quantite" name="quantite" required min="1" value="1"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                               placeholder="Ex: 10">
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="btn btn-add">Enregistrer la vente</button>
+                        <a href="/produits-extra/ventes" class="btn btn-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <span>2026 Compagnie aerienne</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>

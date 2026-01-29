@@ -42,6 +42,11 @@
         <a class="menu-link" href="/publicites/ca"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/publicites/ca')} ? ' is-active' : ''">CA Publicités</a>
         <hr style="border:none;border-top:1px solid var(--border-light);margin:10px 0;" />
+        <a class="menu-link" href="/produits-extra"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/produits-extra') and !#strings.contains(#httpServletRequest.requestURI, '/ventes')} ? ' is-active' : ''">Produits Extra</a>
+        <a class="menu-link" href="/produits-extra/ventes"
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/produits-extra/ventes')} ? ' is-active' : ''">Ventes Produits</a>
+        <hr style="border:none;border-top:1px solid var(--border-light);margin:10px 0;" />
         <!--<button class="theme-toggle" onclick="toggleTheme()" title="Basculer le thème">
             <span class="icon moon-icon">🌙</span>
             <span class="icon sun-icon">☀️</span>

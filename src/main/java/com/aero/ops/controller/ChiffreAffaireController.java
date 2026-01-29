@@ -31,6 +31,7 @@ public class ChiffreAffaireController {
     private final VolDetailService volDetailService;
     private final DiffusionPublicitaireService diffusionPublicitaireService;
     private final PaiementPublicitaireService paiementPublicitaireService;
+    private final VenteProduitService venteProduitService;
 
     public ChiffreAffaireController(PaiementService paiementService,
                                     ReservationService reservationService,
@@ -40,7 +41,8 @@ public class ChiffreAffaireController {
                                     CompagnieService compagnieService,
                                     VolDetailService volDetailService,
                                     DiffusionPublicitaireService diffusionPublicitaireService,
-                                    PaiementPublicitaireService paiementPublicitaireService) {
+                                    PaiementPublicitaireService paiementPublicitaireService,
+                                    VenteProduitService venteProduitService) {
         this.paiementService = paiementService;
         this.reservationService = reservationService;
         this.volService = volService;
@@ -50,6 +52,7 @@ public class ChiffreAffaireController {
         this.volDetailService = volDetailService;
         this.diffusionPublicitaireService = diffusionPublicitaireService;
         this.paiementPublicitaireService = paiementPublicitaireService;
+        this.venteProduitService = venteProduitService;
     }
 
     @GetMapping
@@ -71,7 +74,7 @@ public class ChiffreAffaireController {
         int nbPaiements = paiements.size();
         BigDecimal moyenne = nbPaiements > 0 ? total.divide(BigDecimal.valueOf(nbPaiements), 2, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO;
 
-        // Calcul du CA par vol (avec tickets et publicités)
+        // Calcul du CA par vol (avec tickets, publicités et produits)
         List<ChiffreAffaireVolDTO> caParVol = calculerCAParVol(startDate, endDate, compagnieId, avionId);
         
         // Totaux globaux
@@ -87,10 +90,17 @@ public class ChiffreAffaireController {
         BigDecimal totalPubRestant = caParVol.stream()
                 .map(ChiffreAffaireVolDTO::getMontantPubRestant)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        // Total CA encaissé = tickets + publicités payées uniquement
-        BigDecimal totalGlobal = totalTickets.add(totalPubPaye);
-        // Total CA potentiel = tickets + toutes les publicités
-        BigDecimal totalCaPotentiel = totalTickets.add(totalPublicites);
+        // Totaux produits vendus
+        Integer totalNbProduits = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getNbProduitsVendus)
+                .reduce(0, Integer::sum);
+        BigDecimal totalMontantProduits = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getMontantProduits)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Total CA encaissé = tickets + publicités payées + produits
+        BigDecimal totalGlobal = totalTickets.add(totalPubPaye).add(totalMontantProduits);
+        // Total CA potentiel = tickets + toutes les publicités + produits
+        BigDecimal totalCaPotentiel = totalTickets.add(totalPublicites).add(totalMontantProduits);
 
         model.addAttribute("paiements", paiements);
         model.addAttribute("total", total);
@@ -101,6 +111,8 @@ public class ChiffreAffaireController {
         model.addAttribute("totalPublicites", totalPublicites);
         model.addAttribute("totalPubPaye", totalPubPaye);
         model.addAttribute("totalPubRestant", totalPubRestant);
+        model.addAttribute("totalNbProduits", totalNbProduits);
+        model.addAttribute("totalMontantProduits", totalMontantProduits);
         model.addAttribute("totalGlobal", totalGlobal);
         model.addAttribute("totalCaPotentiel", totalCaPotentiel);
         model.addAttribute("vols", volService.getAll());
@@ -118,7 +130,7 @@ public class ChiffreAffaireController {
     }
 
     /**
-     * Calcule le CA par vol avec tickets vendus et publicités
+     * Calcule le CA par vol avec tickets vendus, publicités et produits extra
      */
     private List<ChiffreAffaireVolDTO> calculerCAParVol(LocalDate startDate, LocalDate endDate, Long compagnieId, Long avionId) {
         List<ChiffreAffaireVolDTO> result = new ArrayList<>();
@@ -164,6 +176,10 @@ public class ChiffreAffaireController {
                 montantPubPaye = montantPubPaye.add(diff.getMontantPaye());
             }
             
+            // Calcul des produits vendus sur ce vol
+            Integer nbProduitsVendus = venteProduitService.getTotalQuantiteByVolDetail(vd.getIdVolDetail());
+            BigDecimal montantProduits = venteProduitService.getTotalMontantByVolDetail(vd.getIdVolDetail());
+            
             // Créer le DTO
             String aeroportDepart = vd.getVol() != null && vd.getVol().getAeroportDepart() != null 
                     ? vd.getVol().getAeroportDepart().getNom() + " (" + vd.getVol().getAeroportDepart().getCodeIata() + ")"
@@ -182,7 +198,9 @@ public class ChiffreAffaireController {
                     vd.getDateHeureDepart().toLocalTime(),
                     montantTickets,
                     montantPublicites,
-                    montantPubPaye
+                    montantPubPaye,
+                    nbProduitsVendus,
+                    montantProduits
             );
             
             result.add(dto);
@@ -273,11 +291,20 @@ public class ChiffreAffaireController {
         BigDecimal totalPublicites = caParVol.stream()
                 .map(ChiffreAffaireVolDTO::getMontantPublicites)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalGlobal = totalTickets.add(totalPublicites);
+        // Totaux produits vendus
+        Integer totalNbProduits = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getNbProduitsVendus)
+                .reduce(0, Integer::sum);
+        BigDecimal totalMontantProduits = caParVol.stream()
+                .map(ChiffreAffaireVolDTO::getMontantProduits)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalGlobal = totalTickets.add(totalPublicites).add(totalMontantProduits);
 
         model.addAttribute("caParVol", caParVol);
         model.addAttribute("totalTickets", totalTickets);
         model.addAttribute("totalPublicites", totalPublicites);
+        model.addAttribute("totalNbProduits", totalNbProduits);
+        model.addAttribute("totalMontantProduits", totalMontantProduits);
         model.addAttribute("totalGlobal", totalGlobal);
         model.addAttribute("avions", avionService.getAll());
         model.addAttribute("compagnies", compagnieService.getAll());
@@ -338,6 +365,10 @@ public class ChiffreAffaireController {
                 }
             }
             
+            // Calcul des produits vendus sur ce vol
+            Integer nbProduitsVendus = venteProduitService.getTotalQuantiteByVolDetail(vd.getIdVolDetail());
+            BigDecimal montantProduits = venteProduitService.getTotalMontantByVolDetail(vd.getIdVolDetail());
+            
             // Créer le DTO
             String aeroportDepart = vd.getVol() != null && vd.getVol().getAeroportDepart() != null 
                     ? vd.getVol().getAeroportDepart().getNom() + " (" + vd.getVol().getAeroportDepart().getCodeIata() + ")"
@@ -355,7 +386,10 @@ public class ChiffreAffaireController {
                     vd.getDateHeureDepart().toLocalDate(),
                     vd.getDateHeureDepart().toLocalTime(),
                     montantTickets,
-                    montantPublicites
+                    montantPublicites,
+                    montantPublicites,
+                    nbProduitsVendus,
+                    montantProduits
             );
             
             result.add(dto);

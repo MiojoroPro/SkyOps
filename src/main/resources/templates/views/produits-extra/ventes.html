@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventes Produits | Compagnie aerienne</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{ui/menu :: menu}"></div>
+    <main class="main-area">
+        <div class="main-header">
+            <div>
+                <p class="eyebrow">Gestion</p>
+                <h1>Ventes de Produits Extra</h1>
+                <p class="module-description">Historique des ventes de produits à bord des vols</p>
+            </div>
+            <div class="main-actions">
+                <a href="/produits-extra" class="btn btn-secondary">Voir les produits</a>
+                <a href="/produits-extra/ventes/create" class="btn btn-add">+ Nouvelle Vente</a>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <!-- Filtres -->
+        <div class="table-wrapper">
+            <header>
+                <h3 class="section-title">Filtrer par vol</h3>
+            </header>
+            <form th:action="@{/produits-extra/ventes}" method="get" style="padding: 16px 24px; display: flex; gap: 12px; align-items: end;">
+                <div class="form-group" style="margin: 0;">
+                    <label>Vol</label>
+                    <select name="volDetailId" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 300px;">
+                        <option value="">Tous les vols</option>
+                        <option th:each="vd : ${volDetails}" th:value="${vd.idVolDetail}" 
+                                th:text="${vd.vol.numeroVol + ' - ' + #temporals.format(vd.dateHeureDepart, 'dd/MM/yyyy HH:mm')}"
+                                th:selected="${vd.idVolDetail == selectedVolDetail}"></option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-apply">Filtrer</button>
+                <a href="/produits-extra/ventes" class="btn btn-secondary">Reset</a>
+            </form>
+        </div>
+
+        <!-- Tableau des ventes -->
+        <div class="table-wrapper" style="margin-top: 20px;">
+            <header>
+                <h3 class="section-title">Liste des ventes</h3>
+            </header>
+            <div class="table-responsive" style="padding: 0 24px 24px;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Produit</th>
+                        <th>Vol</th>
+                        <th>Date Vente</th>
+                        <th>Quantité</th>
+                        <th>Prix Unitaire</th>
+                        <th>Montant Total</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="v : ${ventes}">
+                        <td th:text="${v.idVente}">-</td>
+                        <td th:text="${v.produit != null ? v.produit.nom : '-'}">-</td>
+                        <td th:text="${v.volDetail != null && v.volDetail.vol != null ? v.volDetail.vol.numeroVol + ' (' + #temporals.format(v.volDetail.dateHeureDepart, 'dd/MM') + ')' : '-'}">-</td>
+                        <td th:text="${v.dateVente != null ? #temporals.format(v.dateVente, 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                        <td style="font-weight: bold;" th:text="${v.quantite}">0</td>
+                        <td th:text="${#numbers.formatInteger(v.prixUnitaireVente, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td style="font-weight: bold; color: #4caf50;" 
+                            th:text="${#numbers.formatInteger(v.montantTotal, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td>
+                            <a th:href="@{/produits-extra/ventes/delete/{id}(id=${v.idVente})}" class="btn btn-sm btn-delete"
+                               onclick="return confirm('Supprimer cette vente ?');">Supprimer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(ventes)}">
+                        <td colspan="8" style="text-align:center;padding:20px;color:#999;">Aucune vente trouvée.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <span>2026 Compagnie aerienne</span>
+        </footer>
+    </main>
+</div>
+</body>
+</html>
