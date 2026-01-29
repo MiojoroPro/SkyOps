@@ -1,9 +1,9 @@
-DROP DATABASE IF EXISTS "aero";
-CREATE DATABASE "aero";
-\c "aero";
+DROP DATABASE IF EXISTS aero;
+CREATE DATABASE aero;
+\c aero;
 
 -- =========================
--- TABLE : UTILISATEUR
+-- TABLE UTILISATEUR
 -- =========================
 CREATE TABLE utilisateur (
     id_utilisateur SERIAL PRIMARY KEY,
@@ -11,11 +11,11 @@ CREATE TABLE utilisateur (
     prenom VARCHAR(100),
     email VARCHAR(150) UNIQUE NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL
+    role VARCHAR(30) NOT NULL
 );
 
 -- =========================
--- TABLE : COMPAGNIE
+-- TABLE COMPAGNIE
 -- =========================
 CREATE TABLE compagnie (
     id_compagnie SERIAL PRIMARY KEY,
@@ -26,7 +26,7 @@ CREATE TABLE compagnie (
 );
 
 -- =========================
--- TABLE : AEROPORT
+-- TABLE AEROPORT
 -- =========================
 CREATE TABLE aeroport (
     id_aeroport SERIAL PRIMARY KEY,
@@ -37,100 +37,216 @@ CREATE TABLE aeroport (
 );
 
 -- =========================
--- TABLE : AVION
+-- TABLE CLASSE_SIEGE
+-- =========================
+CREATE TABLE classe_siege (
+    id_classe SERIAL PRIMARY KEY,
+    code VARCHAR(10) NOT NULL,
+    libelle VARCHAR(50) NOT NULL
+);
+
+-- =========================
+-- TABLE CATEGORIE_AGE
+-- =========================
+CREATE TABLE categorie_age (
+    id_categorie SERIAL PRIMARY KEY,
+    libelle VARCHAR(50) NOT NULL,
+    age_min INT NOT NULL,
+    age_max INT NOT NULL,
+    CONSTRAINT chk_age CHECK (age_min <= age_max)
+);
+
+-- =========================
+-- TABLE AVION
 -- =========================
 CREATE TABLE avion (
     id_avion SERIAL PRIMARY KEY,
     modele VARCHAR(100) NOT NULL,
-    capacite INT NOT NULL CHECK (capacite > 0),
-    statut VARCHAR(20) NOT NULL,
+    statut VARCHAR(30) NOT NULL,
     id_compagnie INT NOT NULL,
-    CONSTRAINT fk_avion_compagnie
-        FOREIGN KEY (id_compagnie)
-        REFERENCES compagnie(id_compagnie)
+    FOREIGN KEY (id_compagnie) REFERENCES compagnie(id_compagnie)
 );
 
 -- =========================
--- TABLE : VOL (ligne aérienne)
+-- TABLE AVION_CLASSE
+-- =========================
+CREATE TABLE avion_classe (
+    id_avion INT NOT NULL,
+    id_classe INT NOT NULL,
+    capacite INT NOT NULL CHECK (capacite > 0),
+    PRIMARY KEY (id_avion, id_classe),
+    FOREIGN KEY (id_avion) REFERENCES avion(id_avion),
+    FOREIGN KEY (id_classe) REFERENCES classe_siege(id_classe)
+);
+
+-- =========================
+-- TABLE VOL
 -- =========================
 CREATE TABLE vol (
     id_vol SERIAL PRIMARY KEY,
     numero_vol VARCHAR(20) NOT NULL,
-    prix_base NUMERIC(10,2) NOT NULL CHECK (prix_base >= 0),
     id_compagnie INT NOT NULL,
     id_aeroport_depart INT NOT NULL,
     id_aeroport_arrivee INT NOT NULL,
-
-    CONSTRAINT fk_vol_compagnie
-        FOREIGN KEY (id_compagnie)
-        REFERENCES compagnie(id_compagnie),
-
-    CONSTRAINT fk_vol_aeroport_depart
-        FOREIGN KEY (id_aeroport_depart)
-        REFERENCES aeroport(id_aeroport),
-
-    CONSTRAINT fk_vol_aeroport_arrivee
-        FOREIGN KEY (id_aeroport_arrivee)
-        REFERENCES aeroport(id_aeroport),
-
-    CONSTRAINT chk_aeroport_different
-        CHECK (id_aeroport_depart <> id_aeroport_arrivee)
+    FOREIGN KEY (id_compagnie) REFERENCES compagnie(id_compagnie),
+    FOREIGN KEY (id_aeroport_depart) REFERENCES aeroport(id_aeroport),
+    FOREIGN KEY (id_aeroport_arrivee) REFERENCES aeroport(id_aeroport),
+    CONSTRAINT chk_aeroport_different CHECK (id_aeroport_depart <> id_aeroport_arrivee)
 );
 
 -- =========================
--- TABLE : VOL_PLANIFIE
+-- TABLE VOL_DETAIL
 -- =========================
 CREATE TABLE vol_detail (
     id_vol_detail SERIAL PRIMARY KEY,
     date_heure_depart TIMESTAMP NOT NULL,
     date_heure_arrivee TIMESTAMP NOT NULL,
-    statut VARCHAR(20),
-
+    statut VARCHAR(30) NOT NULL,
     id_vol INT NOT NULL,
     id_avion INT NOT NULL,
-
-    CONSTRAINT fk_vol_detail_vol
-        FOREIGN KEY (id_vol) REFERENCES vol(id_vol),
-
-    CONSTRAINT fk_vol_detail_avion
-        FOREIGN KEY (id_avion) REFERENCES avion(id_avion)
+    FOREIGN KEY (id_vol) REFERENCES vol(id_vol),
+    FOREIGN KEY (id_avion) REFERENCES avion(id_avion),
+    CONSTRAINT chk_dates CHECK (date_heure_depart < date_heure_arrivee)
 );
 
+-- =========================
+-- TABLE PRIX_CLASSE
+-- =========================
+CREATE TABLE prix_classe (
+    id_vol_detail INT NOT NULL,
+    id_classe INT NOT NULL,
+    prix_base DECIMAL(10,2) NOT NULL CHECK (prix_base > 0),
+    PRIMARY KEY (id_vol_detail, id_classe),
+    FOREIGN KEY (id_vol_detail) REFERENCES vol_detail(id_vol_detail),
+    FOREIGN KEY (id_classe) REFERENCES classe_siege(id_classe)
+);
 
 -- =========================
--- TABLE : RESERVATION
+-- TABLE REMISE_CLASSE_CATEGORIE
+-- =========================
+CREATE TABLE remise_classe_categorie (
+    id_classe INT NOT NULL,
+    id_categorie INT NOT NULL,
+    pourcentage DECIMAL(5,2) NOT NULL CHECK (pourcentage BETWEEN 0 AND 100),
+    PRIMARY KEY (id_classe, id_categorie),
+    FOREIGN KEY (id_classe) REFERENCES classe_siege(id_classe),
+    FOREIGN KEY (id_categorie) REFERENCES categorie_age(id_categorie)
+);
+
+-- =========================
+-- TABLE RESERVATION
 -- =========================
 CREATE TABLE reservation (
     id_reservation SERIAL PRIMARY KEY,
-    date_reservation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    numero_reservation VARCHAR(50) UNIQUE NOT NULL,
-    statut VARCHAR(20) NOT NULL,
-
+    numero_reservation VARCHAR(30) UNIQUE NOT NULL,
+    statut VARCHAR(30) NOT NULL,
     id_utilisateur INT NOT NULL,
     id_vol_detail INT NOT NULL,
-
-    CONSTRAINT fk_reservation_utilisateur
-        FOREIGN KEY (id_utilisateur)
-        REFERENCES utilisateur(id_utilisateur),
-
-    CONSTRAINT fk_reservation_vol_detail
-        FOREIGN KEY (id_vol_detail)
-        REFERENCES vol_detail(id_vol_detail)
+    id_classe INT NOT NULL,
+    id_categorie INT NOT NULL,
+    FOREIGN KEY (id_utilisateur) REFERENCES utilisateur(id_utilisateur),
+    FOREIGN KEY (id_vol_detail) REFERENCES vol_detail(id_vol_detail),
+    FOREIGN KEY (id_classe) REFERENCES classe_siege(id_classe),
+    FOREIGN KEY (id_categorie) REFERENCES categorie_age(id_categorie)
 );
 
-
 -- =========================
--- TABLE : PAIEMENT
+-- TABLE PAIEMENT
 -- =========================
 CREATE TABLE paiement (
     id_paiement SERIAL PRIMARY KEY,
-    date_paiement TIMESTAMP,
-    montant NUMERIC(10,2) NOT NULL CHECK (montant >= 0),
-    statut VARCHAR(20) NOT NULL,
+    montant DECIMAL(10,2) NOT NULL CHECK (montant > 0),
+    statut VARCHAR(30) NOT NULL,
+    id_reservation INT NOT NULL,
+    FOREIGN KEY (id_reservation) REFERENCES reservation(id_reservation)
+);
 
-    id_reservation INT UNIQUE NOT NULL,
+-- =========================
+-- PUBLICITÉ
+-- =========================
+CREATE TABLE societe_annonceur (
+    id_societe SERIAL PRIMARY KEY,
+    nom VARCHAR(150) NOT NULL,
+    email VARCHAR(150),
+    telephone VARCHAR(30)
+);
 
-    CONSTRAINT fk_paiement_reservation
-        FOREIGN KEY (id_reservation)
-        REFERENCES reservation(id_reservation)
+CREATE TABLE publicite (
+    id_publicite SERIAL PRIMARY KEY,
+    titre VARCHAR(150) NOT NULL,
+    duree_seconde INT NOT NULL,
+    description TEXT,
+    id_societe INT NOT NULL,
+    FOREIGN KEY (id_societe) REFERENCES societe_annonceur(id_societe)
+);
+
+CREATE TABLE tarif_publicitaire (
+    id_tarif SERIAL PRIMARY KEY,
+    prix_unitaire DECIMAL(10,2) NOT NULL CHECK (prix_unitaire > 0),
+    date_debut DATE NOT NULL,
+    date_fin DATE
+);
+
+CREATE TABLE diffusion_publicitaire (
+    id_diffusion SERIAL PRIMARY KEY,
+    mois INT NOT NULL CHECK (mois BETWEEN 1 AND 12),
+    annee INT NOT NULL,
+    nombre_diffusions INT NOT NULL CHECK (nombre_diffusions > 0),
+    id_publicite INT NOT NULL,
+    id_tarif INT NOT NULL,
+    id_vol_detail INT NOT NULL,
+    FOREIGN KEY (id_publicite) REFERENCES publicite(id_publicite),
+    FOREIGN KEY (id_tarif) REFERENCES tarif_publicitaire(id_tarif),
+    FOREIGN KEY (id_vol_detail) REFERENCES vol_detail(id_vol_detail),
+    UNIQUE (id_publicite, id_vol_detail, mois, annee)
+);
+
+CREATE TABLE paiement_publicitaire (
+    id_paiement_pub SERIAL PRIMARY KEY,
+    montant DECIMAL(10,2) NOT NULL CHECK (montant > 0),
+    date_paiement TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reference VARCHAR(50),
+    mode_paiement VARCHAR(30),
+    id_diffusion INT NOT NULL,
+    FOREIGN KEY (id_diffusion) REFERENCES diffusion_publicitaire(id_diffusion)
+);
+
+-- ==================================================
+-- 🔥 PARTIE AMÉLIORÉE : PRODUITS EXTRA & VENTES
+-- ==================================================
+
+-- CATALOGUE PRODUITS (SANS STOCK)
+CREATE TABLE produit_extra (
+    id_produit SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    description TEXT,
+    prix_unitaire DECIMAL(10,2) NOT NULL CHECK (prix_unitaire > 0),
+    id_compagnie INT NOT NULL,
+    FOREIGN KEY (id_compagnie) REFERENCES compagnie(id_compagnie),
+    CONSTRAINT uq_produit_compagnie UNIQUE (nom, id_compagnie)
+);
+
+-- STOCK EMBARQUÉ PAR VOL
+CREATE TABLE stock_produit_vol (
+    id_vol_detail INT NOT NULL,
+    id_produit INT NOT NULL,
+    quantite_disponible INT NOT NULL CHECK (quantite_disponible >= 0),
+    PRIMARY KEY (id_vol_detail, id_produit),
+    FOREIGN KEY (id_vol_detail)
+        REFERENCES vol_detail(id_vol_detail)
+        ON DELETE CASCADE,
+    FOREIGN KEY (id_produit)
+        REFERENCES produit_extra(id_produit)
+);
+
+-- VENTE PRODUIT (LIÉE AU STOCK)
+CREATE TABLE vente_produit (
+    id_vente SERIAL PRIMARY KEY,
+    quantite INT NOT NULL CHECK (quantite > 0),
+    prix_unitaire_vente DECIMAL(10,2) NOT NULL CHECK (prix_unitaire_vente > 0),
+    date_vente TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_vol_detail INT NOT NULL,
+    id_produit INT NOT NULL,
+    FOREIGN KEY (id_vol_detail, id_produit)
+        REFERENCES stock_produit_vol(id_vol_detail, id_produit)
 );
