@@ -19,8 +19,6 @@
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/reservations')} ? ' is-active' : ''">Reservations</a>
         <a class="menu-link" href="/chiffre-affaire"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/chiffre-affaire') and !#strings.contains(#httpServletRequest.requestURI, '/encaisse')} ? ' is-active' : ''">CA</a>
-        <a class="menu-link" href="/chiffre-affaire/encaisse"
-           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/chiffre-affaire/encaisse')} ? ' is-active' : ''">CA Encaissé</a>
         <hr style="border:none;border-top:1px solid var(--border-light);margin:10px 0;" />
         <a class="menu-link" href="/classes"
            th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/classes')} ? ' is-active' : ''">Classes Siege</a>
