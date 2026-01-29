@@ -55,6 +55,7 @@ public class ProduitExtraController {
     public String save(@RequestParam("nom") String nom,
                        @RequestParam("description") String description,
                        @RequestParam("prixUnitaire") BigDecimal prixUnitaire,
+                       @RequestParam("stock") Integer stock,
                        @RequestParam("compagnieId") Long compagnieId,
                        RedirectAttributes redirectAttributes) {
         
@@ -62,6 +63,7 @@ public class ProduitExtraController {
         produit.setNom(nom);
         produit.setDescription(description);
         produit.setPrixUnitaire(prixUnitaire);
+        produit.setStock(stock);
         produit.setCompagnie(compagnieService.getById(compagnieId));
         
         produitExtraService.save(produit);
@@ -85,6 +87,7 @@ public class ProduitExtraController {
                          @RequestParam("nom") String nom,
                          @RequestParam("description") String description,
                          @RequestParam("prixUnitaire") BigDecimal prixUnitaire,
+                         @RequestParam("stock") Integer stock,
                          @RequestParam("compagnieId") Long compagnieId,
                          RedirectAttributes redirectAttributes) {
         
@@ -93,6 +96,7 @@ public class ProduitExtraController {
             produit.setNom(nom);
             produit.setDescription(description);
             produit.setPrixUnitaire(prixUnitaire);
+            produit.setStock(stock);
             produit.setCompagnie(compagnieService.getById(compagnieId));
             produitExtraService.save(produit);
             redirectAttributes.addFlashAttribute("success", "Produit modifié avec succès !");
@@ -144,6 +148,12 @@ public class ProduitExtraController {
             return "redirect:/produits-extra/ventes";
         }
         
+        // Vérifier le stock disponible
+        if (!produit.hasStock(quantite)) {
+            redirectAttributes.addFlashAttribute("error", "Stock insuffisant ! Stock disponible : " + produit.getStock());
+            return "redirect:/produits-extra/ventes/create";
+        }
+        
         VenteProduit vente = new VenteProduit();
         vente.setProduit(produit);
         vente.setVolDetail(volDetailService.getById(volDetailId));
@@ -151,15 +161,28 @@ public class ProduitExtraController {
         vente.setPrixUnitaireVente(produit.getPrixUnitaire()); // Prix au moment de la vente
         vente.setDateVente(LocalDateTime.now());
         
+        // Décrémenter le stock
+        produit.decrementerStock(quantite);
+        produitExtraService.save(produit);
+        
         venteProduitService.save(vente);
-        redirectAttributes.addFlashAttribute("success", "Vente enregistrée avec succès !");
+        redirectAttributes.addFlashAttribute("success", "Vente enregistrée avec succès ! Stock restant : " + produit.getStock());
         return "redirect:/produits-extra/ventes";
     }
 
     @GetMapping("/ventes/delete/{id}")
     public String deleteVente(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        // Récupérer la vente pour restaurer le stock
+        VenteProduit vente = venteProduitService.getById(id).orElse(null);
+        if (vente != null && vente.getProduit() != null) {
+            // Restaurer le stock
+            ProduitExtra produit = vente.getProduit();
+            produit.incrementerStock(vente.getQuantite());
+            produitExtraService.save(produit);
+        }
+        
         venteProduitService.delete(id);
-        redirectAttributes.addFlashAttribute("success", "Vente supprimée avec succès !");
+        redirectAttributes.addFlashAttribute("success", "Vente supprimée et stock restauré !");
         return "redirect:/produits-extra/ventes";
     }
 }

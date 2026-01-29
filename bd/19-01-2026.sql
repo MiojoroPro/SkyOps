@@ -309,6 +309,7 @@ CREATE TABLE produit_extra (
     nom VARCHAR(100) NOT NULL,
     description TEXT,
     prix_unitaire DECIMAL(10,2) NOT NULL CHECK (prix_unitaire > 0),
+    stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0),
     
     id_compagnie INT NOT NULL,
     

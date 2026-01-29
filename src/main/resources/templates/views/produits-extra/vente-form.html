@@ -37,7 +37,9 @@
                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                             <option value="">-- Sélectionner un produit --</option>
                             <option th:each="p : ${produits}" th:value="${p.idProduit}" 
-                                    th:text="${p.nom + ' - ' + #numbers.formatInteger(p.prixUnitaire, 1, 'WHITESPACE') + ' MGA (' + p.compagnie.nom + ')'}"></option>
+                                    th:text="${p.nom + ' - ' + #numbers.formatInteger(p.prixUnitaire, 1, 'WHITESPACE') + ' MGA (' + p.compagnie.nom + ') - Stock: ' + p.stock}"
+                                    th:disabled="${p.stock <= 0}"
+                                    th:style="${p.stock <= 0 ? 'color:#999' : ''}"></option>
                         </select>
                     </div>
 

@@ -44,6 +44,14 @@
                     </div>
 
                     <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="stock">Stock disponible *</label>
+                        <input type="number" id="stock" name="stock" th:value="${produit.stock != null ? produit.stock : 0}" 
+                               required min="0"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                               placeholder="Ex: 100">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
                         <label for="compagnieId">Compagnie *</label>
                         <select id="compagnieId" name="compagnieId" required
                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">

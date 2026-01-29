@@ -58,6 +58,7 @@
                         <th>Nom</th>
                         <th>Description</th>
                         <th>Prix Unitaire</th>
+                        <th>Stock</th>
                         <th>Compagnie</th>
                         <th>Actions</th>
                     </tr>
@@ -69,6 +70,8 @@
                         <td th:text="${p.description != null ? p.description : '-'}">-</td>
                         <td style="font-weight: bold; color: #4caf50;" 
                             th:text="${#numbers.formatInteger(p.prixUnitaire, 1, 'WHITESPACE')} + ' MGA'">0 MGA</td>
+                        <td th:style="${p.stock <= 0 ? 'color:#f44336;font-weight:bold' : (p.stock < 10 ? 'color:#ff9800;font-weight:bold' : 'color:#4caf50;font-weight:bold')}"
+                            th:text="${p.stock}">0</td>
                         <td th:text="${p.compagnie != null ? p.compagnie.nom : '-'}">-</td>
                         <td>
                             <a th:href="@{/produits-extra/edit/{id}(id=${p.idProduit})}" class="btn btn-sm btn-edit">Modifier</a>
@@ -77,7 +80,7 @@
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(produits)}">
-                        <td colspan="6" style="text-align:center;padding:20px;color:#999;">Aucun produit trouvé.</td>
+                        <td colspan="7" style="text-align:center;padding:20px;color:#999;">Aucun produit trouvé.</td>
                     </tr>
                     </tbody>
                 </table>

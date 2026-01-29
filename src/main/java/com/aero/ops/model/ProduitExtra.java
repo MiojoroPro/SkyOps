@@ -26,7 +26,37 @@ public class ProduitExtra {
     @Column(name = "prix_unitaire", nullable = false, precision = 10, scale = 2)
     private BigDecimal prixUnitaire;
 
+    @Column(nullable = false)
+    private Integer stock = 0;
+
     @ManyToOne
     @JoinColumn(name = "id_compagnie", nullable = false)
     private Compagnie compagnie;
+
+    /**
+     * Vérifie si le stock est suffisant pour une quantité donnée
+     */
+    public boolean hasStock(int quantite) {
+        return stock != null && stock >= quantite;
+    }
+
+    /**
+     * Décrémente le stock
+     */
+    public void decrementerStock(int quantite) {
+        if (stock != null) {
+            this.stock -= quantite;
+        }
+    }
+
+    /**
+     * Incrémente le stock (réapprovisionnement ou annulation vente)
+     */
+    public void incrementerStock(int quantite) {
+        if (stock == null) {
+            this.stock = quantite;
+        } else {
+            this.stock += quantite;
+        }
+    }
 }
